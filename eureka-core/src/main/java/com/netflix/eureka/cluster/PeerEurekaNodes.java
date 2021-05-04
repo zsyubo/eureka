@@ -72,6 +72,14 @@ public class PeerEurekaNodes {
         return serverConfig.getHealthStatusMinNumberOfAvailablePeers();
     }
 
+
+    /**
+     * 更新对等节点信息
+     * @desc <p>  <p>
+     * @param null
+     * @author zsyubo
+     * @date 2021/5/1 16:47
+     */
     public void start() {
         taskExecutor = Executors.newSingleThreadScheduledExecutor(
                 new ThreadFactory() {

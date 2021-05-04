@@ -201,6 +201,8 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
     }
 
     /**
+     * 从一个对等的eureka节点填充注册表信息。如果通信失败，这个操作会失败到其他节点，直到列表用完。
+     *
      * Populates the registry information from a peer eureka node. This
      * operation fails over to other nodes until the list is exhausted if the
      * communication fails.
