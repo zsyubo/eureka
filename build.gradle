@@ -1,5 +1,5 @@
 buildscript {
-    repositories { jcenter() }
+    // repositories { jcenter() }
 
     dependencies {
         classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:2.2.+'
@@ -26,6 +26,34 @@ if (JavaVersion.current().isJava8Compatible()) {
 }
 
 allprojects {
+      repositories {
+        maven {
+        url 'https://maven.aliyun.com/repository/central'
+        }
+        maven {
+        url 'https://maven.aliyun.com/repository/spring/'
+        }
+        maven {
+        url 'https://maven.aliyun.com/repository/google'
+        }
+        maven {
+        url 'https://maven.aliyun.com/repository/gradle-plugin'
+        }
+        maven {
+        url 'https://maven.aliyun.com/repository/spring'
+        }
+        maven {
+        url 'https://maven.aliyun.com/repository/spring-plugin'
+        }
+        maven {
+        url 'https://maven.aliyun.com/repository/grails-core'
+        }
+        maven {
+        url 'https://maven.aliyun.com/repository/apache-snapshots'
+        }
+        mavenLocal()
+        mavenCentral()
+    }
     ext {
         githubProjectName = 'eureka'
 
