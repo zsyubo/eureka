@@ -63,6 +63,11 @@ import javax.inject.Singleton;
 import static com.netflix.eureka.Names.METRIC_REGISTRY_PREFIX;
 
 /**
+ * 处理对AbstractInstanceRegistry的所有操作复制到对等的Eureka节点，使它们保持同步。
+ * 被复制的主要操作是注册、更新、取消、过期和状态改变。
+ * 当eureka服务器启动时，它试图从对等eureka节点获取所有的注册表信息。如果由于某种原因，这个操作失败了，服务器不允许用户在EurekaServerConfig.getWaitTimeInMsWhenSyncEmpty()中指定的期限内获取注册表信息。
+ * 关于续订有一件重要的事情要注意。如果在EurekaServerConfig.getRenewalPercentThreshold()中指定的期限内，续订下降的幅度超过了EurekaServerConfig.getRenewalThresholdUpdateIntervalMs()中指定的阈值，eureka会认为这是一个危险，并停止到期的实例。
+ *
  * Handles replication of all operations to {@link AbstractInstanceRegistry} to peer
  * <em>Eureka</em> nodes to keep them all in sync.
  *
