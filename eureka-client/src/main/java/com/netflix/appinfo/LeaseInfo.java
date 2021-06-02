@@ -235,6 +235,8 @@ public class LeaseInfo {
     }
 
     /**
+     * 返回客户指定的驱逐设置（例如，在没有更新事件的情况下，要等待多长时间）。
+     *
      * Returns client specified setting for eviction (e.g. how long to wait w/o
      * renewal event)
      *

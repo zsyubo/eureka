@@ -123,6 +123,9 @@ public class Application {
     }
 
     /**
+     *获取与此特定应用程序相关的实例列表。
+     * 请注意，实例在洗牌后总是以随机顺序返回，以避免在启动期间对相同的实例进行通信。正如EurekaClientConfig.getRegistryFetchIntervalSeconds()中所指定的那样，洗牌总是在每个获取周期后发生一次。
+     *
      * Gets the list of instances associated with this particular application.
      * <p>
      * Note that the instances are always returned with random order after

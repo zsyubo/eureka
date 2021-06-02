@@ -103,6 +103,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
 
     protected String[] allKnownRemoteRegions = EMPTY_STR_ARRAY;
     protected volatile int numberOfRenewsPerMinThreshold;
+    // 在子类InstanceRegistry做的初始化
     protected volatile int expectedNumberOfClientsSendingRenews;
 
     protected final EurekaServerConfig serverConfig;
@@ -186,24 +187,29 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     }
 
     /**
+     * 注册一个具有给定期限的新实例。
      * Registers a new instance with a given duration.
      *
      * @see com.netflix.eureka.lease.LeaseManager#register(java.lang.Object, int, boolean)
      */
-    public void register(InstanceInfo registrant, int leaseDuration, boolean isReplication) {
+    public void register(InstanceInfo registrant/**准备处理的节点信息**/, int leaseDuration, boolean isReplication/**为true**/) {
         read.lock();
         try {
+            // 本地服务实例列表
             Map<String, Lease<InstanceInfo>> gMap = registry.get(registrant.getAppName());
             REGISTER.increment(isReplication);
             if (gMap == null) {
+                // 如果为空的话，直接替换
                 final ConcurrentHashMap<String, Lease<InstanceInfo>> gNewMap = new ConcurrentHashMap<String, Lease<InstanceInfo>>();
                 gMap = registry.putIfAbsent(registrant.getAppName(), gNewMap);
                 if (gMap == null) {
                     gMap = gNewMap;
                 }
             }
-            Lease<InstanceInfo> existingLease = gMap.get(registrant.getId());
+
+            Lease<InstanceInfo> existingLease = gMap.get(registrant.getId());   // 取出对应的实例
             // Retain the last dirty timestamp without overwriting it, if there is already a lease
+            // 如果已经有一个租约，则保留最后一个肮脏的时间戳，而不覆盖它。
             if (existingLease != null && (existingLease.getHolder() != null)) {
                 Long existingLastDirtyTimestamp = existingLease.getHolder().getLastDirtyTimestamp();
                 Long registrationLastDirtyTimestamp = registrant.getLastDirtyTimestamp();
@@ -218,12 +224,13 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
                     registrant = existingLease.getHolder();
                 }
             } else {
+                // 该租约不存在，因此是一个新的登记。
                 // The lease does not exist and hence it is a new registration
                 synchronized (lock) {
                     if (this.expectedNumberOfClientsSendingRenews > 0) {
                         // Since the client wants to register it, increase the number of clients sending renews
                         this.expectedNumberOfClientsSendingRenews = this.expectedNumberOfClientsSendingRenews + 1;
-                        updateRenewsPerMinThreshold();
+                        updateRenewsPerMinThreshold(); //处理自我保护机制(每分钟能接收的最少续租次数)
                     }
                 }
                 logger.debug("No previous lease information found; it is new registration");
@@ -1186,9 +1193,13 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     }
 
     protected void updateRenewsPerMinThreshold() {
-        this.numberOfRenewsPerMinThreshold = (int) (this.expectedNumberOfClientsSendingRenews
-                * (60.0 / serverConfig.getExpectedClientRenewalIntervalSeconds())
-                * serverConfig.getRenewalPercentThreshold());
+        // 每分钟能接收的最少续租次数 = 微服务实例总数 * ( 60秒 / 实例续约时间间隔 ) * 有效心跳比率
+        this.numberOfRenewsPerMinThreshold = (int) (this.expectedNumberOfClientsSendingRenews // 默认值为1
+                * (60.0 / serverConfig.getExpectedClientRenewalIntervalSeconds()) //  客户端续期时间为30s
+                * serverConfig.getRenewalPercentThreshold()); // 自我保护机制的
+
+        //举一个栗子：当前 EurekaServer 中有注册了 5 个服务实例，那么在默认情况下，每分钟能接收的最少续租次数就应该是 5 * (60 / 30) * 0.85 = 8.5次，强转为 int 类型 → 8次。
+        // 那就意味着，如果在这个检测周期中，如果 EurekaServer 收到的有效心跳包少于8个，且没有在配置中显式关闭自我保护，则 EurekaServer 会开启自我保护模式，暂停服务剔除。
     }
 
     private static final class RecentlyChangedItem {

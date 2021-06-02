@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
 import com.netflix.discovery.converters.jackson.DataCenterTypeInfoResolver;
 
 /**
+ * 一个简单的接口，用于指示一个特定实例属于哪个数据中心。
  * A simple interface for indicating which <em>datacenter</em> a particular instance belongs.
  *
  * @author Karthik Ranganathan

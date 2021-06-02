@@ -225,10 +225,13 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
                 }
             }
             Applications apps = eurekaClient.getApplications();
+            // 这取出的是撒？
             for (Application app : apps.getRegisteredApplications()) {
+                // 从节点中取出所有注册的node
                 for (InstanceInfo instance : app.getInstances()) {
                     try {
-                        if (isRegisterable(instance)) {
+                        // 同步到自身
+                        if (isRegisterable(instance)) { // 默认返回true
                             register(instance, instance.getLeaseInfo().getDurationInSecs(), true);
                             count++;
                         }
@@ -604,6 +607,7 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
     }
 
     /**
+     * 检查一个实例是否可以在这个区域注册。来自其他地区的实例将被拒绝。
      * Checks if an instance is registerable in this region. Instances from other regions are rejected.
      *
      * @param instanceInfo  th instance info information of the instance

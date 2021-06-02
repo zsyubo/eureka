@@ -1000,6 +1000,8 @@ public class InstanceInfo {
     }
 
     /**
+     * 返回关于何时到期的租赁信息。
+     *
      * Returns the lease information regarding when it expires.
      *
      * @return the lease information of this instance.

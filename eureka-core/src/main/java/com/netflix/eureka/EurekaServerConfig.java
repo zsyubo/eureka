@@ -113,6 +113,9 @@ public interface EurekaServerConfig {
     boolean shouldEnableSelfPreservation();
 
     /**
+     * 在getRenewalThresholdUpdateIntervalMs()指定的时间段内，预计来自客户的最低续订百分比。如果续订量下降到阈值以下，如果shouldEnableSelfPreservation()被启用，则过期将被禁用。
+     * 这些变化在运行时有效。
+     *
      * The minimum percentage of renewals that is expected from the clients in
      * the period specified by {@link #getRenewalThresholdUpdateIntervalMs()}.
      * If the renewals drop below the threshold, the expirations are disabled if
@@ -136,6 +139,8 @@ public interface EurekaServerConfig {
     int getRenewalThresholdUpdateIntervalMs();
 
     /**
+     * 客户端发送心跳的时间间隔。默认为30秒。如果客户端以不同的频率发送心跳，例如每15秒，那么这个参数应该相应地调整，否则，自我保护将不能如期进行。
+     *
      * The interval with which clients are expected to send their heartbeats. Defaults to 30
      * seconds. If clients send heartbeats with different frequency, say, every 15 seconds, then
      * this parameter should be tuned accordingly, otherwise, self-preservation won't work as

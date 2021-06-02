@@ -19,6 +19,9 @@ package com.netflix.eureka.lease;
 import com.netflix.eureka.registry.AbstractInstanceRegistry;
 
 /**
+ * 目的是为了避免在AWS环境中并不罕见的非和平关闭导致的AbstractInstanceRegistry中实例的积累。
+ * 如果一个租约没有续期，它最终会过期，从而标记相关的T立即被驱逐 - 这类似于明确的取消，只是T和LeaseManager之间没有通信。
+ *
  * Describes a time-based availability of a {@link T}. Purpose is to avoid
  * accumulation of instances in {@link AbstractInstanceRegistry} as result of ungraceful
  * shutdowns that is not uncommon in AWS environments.
