@@ -39,6 +39,8 @@ public interface LookupService<T> {
     Application getApplication(String appName);
 
     /**
+     * 返回应用程序对象，该对象基本上是所有当前注册的应用程序的容器。
+     *
      * Returns the {@link Applications} object which is basically a container of
      * all currently registered {@link Application}s.
      *
