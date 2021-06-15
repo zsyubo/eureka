@@ -195,7 +195,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     public void register(InstanceInfo registrant/**准备处理的节点信息**/, int leaseDuration, boolean isReplication/**为true**/) {
         read.lock();
         try {
-            // 本地服务实例列表
+            // 本地服务实例列表   registrant.getAppName() 是应用名称
             Map<String, Lease<InstanceInfo>> gMap = registry.get(registrant.getAppName());
             REGISTER.increment(isReplication);
             if (gMap == null) {
@@ -206,8 +206,8 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
                     gMap = gNewMap;
                 }
             }
-
-            Lease<InstanceInfo> existingLease = gMap.get(registrant.getId());   // 取出对应的实例
+            // 根据服务id 取出已注册的服务信息
+            Lease<InstanceInfo> existingLease = gMap.get(registrant.getId());
             // Retain the last dirty timestamp without overwriting it, if there is already a lease
             // 如果已经有一个租约，则保留最后一个肮脏的时间戳，而不覆盖它。
             if (existingLease != null && (existingLease.getHolder() != null)) {

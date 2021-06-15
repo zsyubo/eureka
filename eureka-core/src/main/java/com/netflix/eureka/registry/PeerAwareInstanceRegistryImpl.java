@@ -224,10 +224,11 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
                     break;
                 }
             }
+            // 取出的是对等节点的信息封装类
             Applications apps = eurekaClient.getApplications();
-            // 这取出的是撒？
+            // 取出的应用列表(比如 order-service)
             for (Application app : apps.getRegisteredApplications()) {
-                // 从节点中取出所有注册的node
+                // 应用的注册实例列表(比如 127.0.0.1:8761)
                 for (InstanceInfo instance : app.getInstances()) {
                     try {
                         // 同步到自身
