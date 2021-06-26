@@ -42,6 +42,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 其实就是存储的节点信息
+ * 持有在Eureka服务器上注册所需信息并被其他组件发现的类。
+ *
  * The class that holds information required for registration with
  * <tt>Eureka Server</tt> and to be discovered by other components.
  * <p>
@@ -89,9 +92,11 @@ public class InstanceInfo {
     public static final int DEFAULT_COUNTRY_ID = 1; // US
 
     // The (fixed) instanceId for this instanceInfo. This should be unique within the scope of the appName.
+    // 实例id
     private volatile String instanceId;
-
+    // 应用名
     private volatile String appName;
+
     @Auto
     private volatile String appGroupName;
 
@@ -145,8 +150,10 @@ public class InstanceInfo {
     private volatile Boolean isCoordinatingDiscoveryServer = Boolean.FALSE;
     @XStreamAlias("metadata")
     private volatile Map<String, String> metadata;
+    // 该实例的更新时间，当状态被更新时。
     @Auto
     private volatile Long lastUpdatedTimestamp;
+    // 获取该实例被续约的最后时间戳。
     @Auto
     private volatile Long lastDirtyTimestamp;
     @Auto

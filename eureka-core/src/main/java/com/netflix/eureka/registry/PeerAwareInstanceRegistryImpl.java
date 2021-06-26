@@ -154,10 +154,13 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
 
     @Override
     public void init(PeerEurekaNodes peerEurekaNodes) throws Exception {
+        // 5.4.1.1 启动续订租约的频率统计器
         this.numberOfReplicationsLastMin.start();
-        this.peerEurekaNodes = peerEurekaNodes;
+        this.peerEurekaNodes = peerEurekaNodes;// 促使化缓存cache？
         initializedResponseCache();
+        // 5.4.1.2 开启续订租约最低阈值检查的定时任务
         scheduleRenewalThresholdUpdateTask();
+        // 5.4.1.3 初始化远程分区注册中心
         initRemoteRegionRegistry();
 
         try {
@@ -189,6 +192,8 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
     }
 
     /**
+     * 安排定期更新更新阈值的任务。续订阈值将被用来确定续订量是否因网络分区而急剧下降，并保护一次过期的实例太多。
+     *
      * Schedule the task that updates <em>renewal threshold</em> periodically.
      * The renewal threshold would be used to determine if the renewals drop
      * dramatically because of network partition and to protect expiring too
@@ -226,13 +231,13 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
             }
             // 取出的是对等节点的信息封装类
             Applications apps = eurekaClient.getApplications();
-            // 取出的应用列表(比如 order-service)
+            // 取出的应用列表(比如 order-service), 其实可以理解为命名空间
             for (Application app : apps.getRegisteredApplications()) {
                 // 应用的注册实例列表(比如 127.0.0.1:8761)
                 for (InstanceInfo instance : app.getInstances()) {
                     try {
                         // 同步到自身
-                        if (isRegisterable(instance)) { // 默认返回true
+                        if (isRegisterable(instance)) { // 默认返回true，主要是用于亚马逊
                             register(instance, instance.getLeaseInfo().getDurationInSecs(), true);
                             count++;
                         }
@@ -542,6 +547,7 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
         try {
             Applications apps = eurekaClient.getApplications();
             int count = 0;
+            // 只要注册了的实例都会+1；
             for (Application app : apps.getRegisteredApplications()) {
                 for (InstanceInfo instance : app.getInstances()) {
                     if (this.isRegisterable(instance)) {
@@ -552,8 +558,9 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
             synchronized (lock) {
                 // Update threshold only if the threshold is greater than the
                 // current expected threshold or if self preservation is disabled.
-                if ((count) > (serverConfig.getRenewalPercentThreshold() * expectedNumberOfClientsSendingRenews)
-                        || (!this.isSelfPreservationModeEnabled())) {
+                if ((count) > (serverConfig.getRenewalPercentThreshold()/* 最低续订比例 默认0.85*/ * expectedNumberOfClientsSendingRenews)
+                        || (!this.isSelfPreservationModeEnabled()) /* 是否开启保护模式 默认true*/) {
+                    // 更新保护模式续租数量
                     this.expectedNumberOfClientsSendingRenews = count;
                     updateRenewsPerMinThreshold();
                 }
@@ -608,6 +615,7 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
     }
 
     /**
+     * 默认返回true。。。。只有AmazonInfo特殊点。
      * 检查一个实例是否可以在这个区域注册。来自其他地区的实例将被拒绝。
      * Checks if an instance is registerable in this region. Instances from other regions are rejected.
      *

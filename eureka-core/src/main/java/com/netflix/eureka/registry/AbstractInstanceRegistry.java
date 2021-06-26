@@ -86,8 +86,10 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
             .<String, InstanceStatus>build().asMap();
 
     // CircularQueues here for debugging/statistics purposes only
+    // 最近注册记录
     private final CircularQueue<Pair<Long, String>> recentRegisteredQueue;
     private final CircularQueue<Pair<Long, String>> recentCanceledQueue;
+    // 最近更改队列
     private ConcurrentLinkedQueue<RecentlyChangedItem> recentlyChangedQueue = new ConcurrentLinkedQueue<RecentlyChangedItem>();
 
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
@@ -211,6 +213,8 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
             // Retain the last dirty timestamp without overwriting it, if there is already a lease
             // 如果已经有一个租约，则保留最后一个肮脏的时间戳，而不覆盖它。
             if (existingLease != null && (existingLease.getHolder() != null)) {
+                //  这地方判断  如果已存在节点的 最后更新时间大于传入的节点信息的更新时间，那么就去拿已存在的那个节点信息来替换传入的节点信息
+
                 Long existingLastDirtyTimestamp = existingLease.getHolder().getLastDirtyTimestamp();
                 Long registrationLastDirtyTimestamp = registrant.getLastDirtyTimestamp();
                 logger.debug("Existing lease found (existing={}, provided={}", existingLastDirtyTimestamp, registrationLastDirtyTimestamp);
@@ -231,6 +235,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
                         // Since the client wants to register it, increase the number of clients sending renews
                         this.expectedNumberOfClientsSendingRenews = this.expectedNumberOfClientsSendingRenews + 1;
                         updateRenewsPerMinThreshold(); //处理自我保护机制(每分钟能接收的最少续租次数)
+                        // 每分钟能接收的最少续租次数 = 微服务实例总数 * ( 60秒 / 实例续约时间间隔 ) * 有效心跳比率
                     }
                 }
                 logger.debug("No previous lease information found; it is new registration");
@@ -244,6 +249,9 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
                     System.currentTimeMillis(),
                     registrant.getAppName() + "(" + registrant.getId() + ")"));
             // This is where the initial state transfer of overridden status happens
+
+            // 一个registrant最开始就是UNKNOWN状态
+            // 这地方的意思是当覆盖状态发生变动，才去放到Map
             if (!InstanceStatus.UNKNOWN.equals(registrant.getOverriddenStatus())) {
                 logger.debug("Found overridden status {} for instance {}. Checking to see if needs to be add to the "
                                 + "overrides", registrant.getOverriddenStatus(), registrant.getId());
@@ -252,22 +260,28 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
                     overriddenInstanceStatusMap.put(registrant.getId(), registrant.getOverriddenStatus());
                 }
             }
+            // 拆分开的意义在于可能哟欧重新注册的情况，因为获取出来美哟欧欧remove
             InstanceStatus overriddenStatusFromMap = overriddenInstanceStatusMap.get(registrant.getId());
             if (overriddenStatusFromMap != null) {
                 logger.info("Storing overridden status {} from map", overriddenStatusFromMap);
+                // 就是覆盖状态更新状态
                 registrant.setOverriddenStatus(overriddenStatusFromMap);
             }
 
-            // Set the status based on the overridden status rules
+            // Set the status based on the overridden status rules  根据重写的状态规则设置状态
+            // 经过上面的处理后，这里获取到微服务实例的最终状态，并真正地设置进去
             InstanceStatus overriddenInstanceStatus = getOverriddenInstanceStatus(registrant, existingLease, isReplication);
+            // 更新状态
             registrant.setStatusWithoutDirty(overriddenInstanceStatus);
 
             // If the lease is registered with UP status, set lease service up timestamp
             if (InstanceStatus.UP.equals(registrant.getStatus())) {
+                // 设置服务注册时间  只会在第一次调用时产生影响
                 lease.serviceUp();
             }
             registrant.setActionType(ActionType.ADDED);
             recentlyChangedQueue.add(new RecentlyChangedItem(lease));
+            // 设置实例的更新时间
             registrant.setLastUpdatedTimestamp();
             invalidateCache(registrant.getAppName(), registrant.getVIPAddress(), registrant.getSecureVipAddress());
             logger.info("Registered instance {}/{} with status {} (replication={})",
@@ -1336,6 +1350,8 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     }
 
     /**
+     * 子类：new FirstMatchWinsCompositeRule(new DownOrStartingRule(), new OverrideExistsRule(overriddenInstanceStatusMap), new LeaseExistsRule());
+     *
      * @return The rule that will process the instance status override.
      */
     protected abstract InstanceStatusOverrideRule getInstanceInfoOverrideRule();

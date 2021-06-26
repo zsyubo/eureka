@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 微服务实例的节点集合
  * Helper class to manage lifecycle of a collection of {@link PeerEurekaNode}s.
  *
  * @author Tomasz Bak
@@ -40,7 +41,7 @@ public class PeerEurekaNodes {
     protected final EurekaClientConfig clientConfig;
     protected final ServerCodecs serverCodecs;
     private final ApplicationInfoManager applicationInfoManager;
-
+    // eureka对等节点列表。
     private volatile List<PeerEurekaNode> peerEurekaNodes = Collections.emptyList();
     private volatile Set<String> peerEurekaNodeUrls = Collections.emptySet();
 
@@ -84,6 +85,8 @@ public class PeerEurekaNodes {
                 }
         );
         try {
+            // 这样写是为了一启动就执行一次、
+            // 从配置文件中更新对等节点列表
             updatePeerEurekaNodes(resolvePeerUrls());
             Runnable peersUpdateTask = new Runnable() {
                 @Override
@@ -124,15 +127,20 @@ public class PeerEurekaNodes {
 
     /**
      * Resolve peer URLs.
-     *
+     *  获取eureka server 集群中其他节点的url
      * @return peer URLs with node's own URL filtered out
      */
     protected List<String> resolvePeerUrls() {
+        // 节点本身的一些信息
         InstanceInfo myInfo = applicationInfoManager.getInfo();
         String zone = InstanceInfo.getZone(clientConfig.getAvailabilityZones(clientConfig.getRegion()), myInfo);
+
+        // 从配置文章中读取 eureka.client.service-url 配置
+        // 还支持dns
         List<String> replicaUrls = EndpointUtils
                 .getDiscoveryServiceUrls(clientConfig, zone, new EndpointUtils.InstanceInfoBasedUrlRandomizer(myInfo));
 
+        // 去掉自己
         int idx = 0;
         while (idx < replicaUrls.size()) {
             if (isThisMyUrl(replicaUrls.get(idx))) {
@@ -145,6 +153,7 @@ public class PeerEurekaNodes {
     }
 
     /**
+     *
      * Given new set of replica URLs, destroy {@link PeerEurekaNode}s no longer available, and
      * create new ones.
      *
@@ -195,6 +204,7 @@ public class PeerEurekaNodes {
     }
 
     protected PeerEurekaNode createPeerEurekaNode(String peerEurekaNodeUrl) {
+        // Eureka 节点之间通信的核心客户端！
         HttpReplicationClient replicationClient = JerseyReplicationClient.createReplicationClient(serverConfig, serverCodecs, peerEurekaNodeUrl);
         String targetHost = hostFromUrl(peerEurekaNodeUrl);
         if (targetHost == null) {

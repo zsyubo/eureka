@@ -21,6 +21,7 @@ public class EurekaContextListener extends GovernatorServletContextListener {
     public void contextInitialized(ServletContextEvent servletContextEvent) {
         super.contextInitialized(servletContextEvent);
         ServletContext sc = servletContextEvent.getServletContext();
+
         sc.setAttribute(EurekaServerContext.class.getName(), serverContext);
 
         // Copy registry from neighboring eureka node

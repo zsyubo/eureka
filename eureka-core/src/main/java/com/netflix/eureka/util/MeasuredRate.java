@@ -41,6 +41,7 @@ public class MeasuredRate {
      * @param sampleInterval in milliseconds
      */
     public MeasuredRate(long sampleInterval) {
+        // 默认60秒
         this.sampleInterval = sampleInterval;
         this.timer = new Timer("Eureka-MeasureRateTimer", true);
         this.isActive = false;

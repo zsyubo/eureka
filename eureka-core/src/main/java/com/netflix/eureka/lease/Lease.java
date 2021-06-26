@@ -19,6 +19,8 @@ package com.netflix.eureka.lease;
 import com.netflix.eureka.registry.AbstractInstanceRegistry;
 
 /**
+ * Lease 对象保存了服务实例信息以及一些实例服务注册相关的时间，如注册时间 registrationTimestamp、最新的续约时间 lastUpdateTimestamp 等
+ *
  * 目的是为了避免在AWS环境中并不罕见的非和平关闭导致的AbstractInstanceRegistry中实例的积累。
  * 如果一个租约没有续期，它最终会过期，从而标记相关的T立即被驱逐 - 这类似于明确的取消，只是T和LeaseManager之间没有通信。
  *
@@ -77,16 +79,20 @@ public class Lease<T> {
     }
 
     /**
+     * 将该服务标记为向上。这只会在第一次调用时产生影响，随后的调用将被忽略。
+     *
      * Mark the service as up. This will only take affect the first time called,
      * subsequent calls will be ignored.
      */
     public void serviceUp() {
+        // (第一次初始化才去做)
         if (serviceUpTimestamp == 0) {
             serviceUpTimestamp = System.currentTimeMillis();
         }
     }
 
     /**
+     * 设置续约服务的 UP时间戳。
      * Set the leases service UP timestamp.
      */
     public void setServiceUpTimestamp(long serviceUpTimestamp) {

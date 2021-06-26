@@ -114,7 +114,7 @@ public interface EurekaServerConfig {
 
     /**
      * 在getRenewalThresholdUpdateIntervalMs()指定的时间段内，预计来自客户的最低续订百分比。如果续订量下降到阈值以下，如果shouldEnableSelfPreservation()被启用，则过期将被禁用。
-     * 这些变化在运行时有效。
+     * 这些变化在运行时有效。  默认值0.85
      *
      * The minimum percentage of renewals that is expected from the clients in
      * the period specified by {@link #getRenewalThresholdUpdateIntervalMs()}.
@@ -131,6 +131,8 @@ public interface EurekaServerConfig {
     double getRenewalPercentThreshold();
 
     /**
+     * getRenewalPercentThreshold()中指定的阈值需要被更新的时间间隔。默认值15分钟
+     *
      * The interval with which the threshold as specified in
      * {@link #getRenewalPercentThreshold()} needs to be updated.
      *
@@ -151,6 +153,9 @@ public interface EurekaServerConfig {
     int getExpectedClientRenewalIntervalSeconds();
 
     /**
+     * 更新对等eureka节点变化信息的时间间隔。用户可以使用DNS机制或动态
+     * 集群里eureka节点的变化信息更新的时间间隔，单位为毫秒，默认为10 * 60 * 1000
+     *
      * The interval with which the information about the changes in peer eureka
      * nodes is updated. The user can use the DNS mechanism or dynamic
      * configuration provided by <a href="https://github.com/Netflix/archaius">Archaius</a> to
