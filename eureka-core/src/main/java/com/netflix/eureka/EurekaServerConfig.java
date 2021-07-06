@@ -306,6 +306,8 @@ public interface EurekaServerConfig {
     long getASGCacheExpiryTimeoutMs();
 
     /**
+     * 获取注册表有效载荷在缓存中应保留的时间，如果它没有被变更事件所失效。
+     *
      * Gets the time for which the registry payload should be kept in the cache
      * if it is not invalidated by change events.
      *

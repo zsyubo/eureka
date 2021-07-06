@@ -77,6 +77,8 @@ public class ApplicationsResource {
     }
 
     /**
+     * 获取关于一个特定的com.netflix.discovery.shared.Application的信息。
+     *
      * Gets information about a particular {@link com.netflix.discovery.shared.Application}.
      *
      * @param version

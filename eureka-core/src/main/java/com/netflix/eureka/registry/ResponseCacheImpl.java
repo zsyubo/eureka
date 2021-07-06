@@ -123,9 +123,11 @@ public class ResponseCacheImpl implements ResponseCache {
     ResponseCacheImpl(EurekaServerConfig serverConfig, ServerCodecs serverCodecs, AbstractInstanceRegistry registry) {
         this.serverConfig = serverConfig;
         this.serverCodecs = serverCodecs;
+        // 是否开启读缓存， 默认true
         this.shouldUseReadOnlyResponseCache = serverConfig.shouldUseReadOnlyResponseCache();
         this.registry = registry;
 
+        // 缓存更新时间，默认30s
         long responseCacheUpdateIntervalMs = serverConfig.getResponseCacheUpdateIntervalMs();
         this.readWriteCacheMap =
                 CacheBuilder.newBuilder().initialCapacity(serverConfig.getInitialCapacityOfResponseCache())

@@ -42,7 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 其实就是存储的节点信息
+ * 其实就是存储的节点信息实例
  * 持有在Eureka服务器上注册所需信息并被其他组件发现的类。
  *
  * The class that holds information required for registration with
@@ -63,6 +63,8 @@ public class InstanceInfo {
     private static final String VERSION_UNKNOWN = "unknown";
 
     /**
+     * InstanceInfo的JSON和XML格式的端口信息并不遵循通常的惯例，这使得它的映射变得复杂。这个类代表了端口信息的线格式。
+     *
      * {@link InstanceInfo} JSON and XML format for port information does not follow the usual conventions, which
      * makes its mapping complicated. This class represents the wire format for port information.
      */
@@ -97,9 +99,11 @@ public class InstanceInfo {
     // 应用名
     private volatile String appName;
 
+    // 引用组名
     @Auto
     private volatile String appGroupName;
 
+    // ip地址
     private volatile String ipAddr;
 
     private static final String SID_DEFAULT = "na";
@@ -107,14 +111,19 @@ public class InstanceInfo {
     private volatile String sid = SID_DEFAULT;
 
     private volatile int port = DEFAULT_PORT;
+    // 安全端口
     private volatile int securePort = DEFAULT_SECURE_PORT;
 
+    // 主页url？
     @Auto
     private volatile String homePageUrl;
+    // 状态url？
     @Auto
     private volatile String statusPageUrl;
+    // 心跳检测uirl
     @Auto
     private volatile String healthCheckUrl;
+    // 安全端口url
     @Auto
     private volatile String secureHealthCheckUrl;
     @Auto
@@ -320,7 +329,9 @@ public class InstanceInfo {
         this.version = ii.version;
     }
 
-
+    /**
+     * 状态
+     */
     public enum InstanceStatus {
         UP, // Ready to receive traffic
         DOWN, // Do not send traffic- healthcheck callback failed
@@ -938,6 +949,8 @@ public class InstanceInfo {
     }
 
     /**
+     * 返回实例的唯一ID。注意）现在id是在instanceProvider中创建时设置的，为什么还要做其他检查？在有多个客户端版本（有些有变化，有些没有变化）的部署中进行升级时，这对于向后兼容仍然是必要的。
+     *
      * Returns the unique id of the instance.
      * (Note) now that id is set at creation time within the instanceProvider, why do the other checks?
      * This is still necessary for backwards compatibility when upgrading in a deployment with multiple

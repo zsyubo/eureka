@@ -28,6 +28,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 该类用于初始化向Eureka服务器注册所需的信息并被其他组件发现。
+ * 注册所需的信息由用户通过传递EurekaInstanceConfig }中合同定义的配置来提供。AWS客户可以使用或扩展CloudInstanceConfig。
+ * 其他非AWS客户端可以使用或扩展MyDataCenterInstanceConfig或非常基本的AbstractInstanceConfig。
+ * 刷新范围的自动配置以及与环境变化有关的功能（例如重新绑定记录仪级别）。
+ *
  * The class that initializes information required for registration with
  * <tt>Eureka Server</tt> and to be discovered by other components.
  *

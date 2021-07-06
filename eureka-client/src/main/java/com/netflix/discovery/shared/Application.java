@@ -44,6 +44,9 @@ import com.thoughtworks.xstream.annotations.XStreamImplicit;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
 /**
+ * 应用程序类持有一个特定应用程序的实例列表。
+ * 其实就是一个微服务，一个微服务包含多个具体的微服务实例
+ *
  * The application class holds the list of instances for a particular
  * application.
  *
@@ -74,6 +77,7 @@ public class Application {
 
     private final AtomicReference<List<InstanceInfo>> shuffledInstances;
 
+    // key为InstanceInfo的instanceId
     private final Map<String, InstanceInfo> instancesMap;
 
     public Application() {

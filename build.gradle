@@ -1,32 +1,36 @@
 buildscript {
     repositories {
-        maven {
-        url 'https://maven.aliyun.com/repository/central'
-        }
-        maven {
-        url 'https://maven.aliyun.com/repository/spring/'
-        }
-        maven {
-        url 'https://maven.aliyun.com/repository/google'
-        }
-        maven {
-        url 'https://maven.aliyun.com/repository/gradle-plugin'
-        }
-        maven {
-        url 'https://maven.aliyun.com/repository/spring'
-        }
-        maven {
-        url 'https://maven.aliyun.com/repository/spring-plugin'
-        }
-        maven {
-        url 'https://maven.aliyun.com/repository/grails-core'
-        }
-        maven {
-        url 'https://maven.aliyun.com/repository/apache-snapshots'
-        }
+//        maven {
+//        url 'https://maven.aliyun.com/repository/central'
+//        }
+//        maven {
+//        url 'https://maven.aliyun.com/repository/spring/'
+//        }
+//        maven {
+//        url 'https://maven.aliyun.com/repository/google'
+//        }
+//        maven {
+//        url 'https://maven.aliyun.com/repository/gradle-plugin'
+//        }
+//        maven {
+//        url 'https://maven.aliyun.com/repository/spring'
+//        }
+//        maven {
+//        url 'https://maven.aliyun.com/repository/spring-plugin'
+//        }
+//        maven {
+//        url 'https://maven.aliyun.com/repository/grails-core'
+//        }
+//        maven {
+//        url 'https://maven.aliyun.com/repository/apache-snapshots'
+//        }
+//        mavenLocal()
+//        jcenter()
+//        mavenCentral()
         mavenLocal()
-        jcenter()
+        gradlePluginPortal()
         mavenCentral()
+        jcenter()
     }
     dependencies {
         classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:2.2.+'
@@ -52,34 +56,41 @@ if (JavaVersion.current().isJava8Compatible()) {
     }
 }
 
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
 allprojects {
       repositories {
-        maven {
-        url 'https://maven.aliyun.com/repository/central'
-        }
-        maven {
-        url 'https://maven.aliyun.com/repository/spring/'
-        }
-        maven {
-        url 'https://maven.aliyun.com/repository/google'
-        }
-        maven {
-        url 'https://maven.aliyun.com/repository/gradle-plugin'
-        }
-        maven {
-        url 'https://maven.aliyun.com/repository/spring'
-        }
-        maven {
-        url 'https://maven.aliyun.com/repository/spring-plugin'
-        }
-        maven {
-        url 'https://maven.aliyun.com/repository/grails-core'
-        }
-        maven {
-        url 'https://maven.aliyun.com/repository/apache-snapshots'
-        }
-        mavenLocal()
-        mavenCentral()
+//        maven {
+//        url 'https://maven.aliyun.com/repository/central'
+//        }
+//        maven {
+//        url 'https://maven.aliyun.com/repository/spring/'
+//        }
+//        maven {
+//        url 'https://maven.aliyun.com/repository/google'
+//        }
+//        maven {
+//        url 'https://maven.aliyun.com/repository/gradle-plugin'
+//        }
+//        maven {
+//        url 'https://maven.aliyun.com/repository/spring'
+//        }
+//        maven {
+//        url 'https://maven.aliyun.com/repository/spring-plugin'
+//        }
+//        maven {
+//        url 'https://maven.aliyun.com/repository/grails-core'
+//        }
+//        maven {
+//        url 'https://maven.aliyun.com/repository/apache-snapshots'
+//        }
+          mavenLocal()
+          gradlePluginPortal()
+          mavenCentral()
+          jcenter()
     }
     ext {
         githubProjectName = 'eureka'

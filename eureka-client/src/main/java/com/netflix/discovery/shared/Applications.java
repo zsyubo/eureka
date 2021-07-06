@@ -47,7 +47,7 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
 /**
- * 封装所有由eureka服务器返回的注册表信息的类。
+ * (客户端)封装所有由eureka服务器返回的注册表信息的类。
  * 注意，注册表信息是按照EurekaClientConfig.getRegistryFetchIntervalSeconds()中的规定从eureka服务器获取的。
  * 一旦信息被获取，它就会被洗掉，并且按照配置EurekaClientConfig.shouldFilterOnlyUpInstances()的规定过滤具有InstanceInfo.InstanceStatus.UP状态的实例。
  *
