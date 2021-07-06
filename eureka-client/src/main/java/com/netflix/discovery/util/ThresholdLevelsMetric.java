@@ -23,6 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 代表不同阈值水平的仪表集合，在此基础上，测量被映射到。值1表示达到的最低阈值水平。
+ * 例如，eureka客户端注册表数据呆滞性定义了30s、60s、120s、240s、480s的阈值。90s的延迟将被映射到测量值{30s=0，60s=1，120=0，240s=0，480s=0，无限=0}。
+ *
  * A collection of gauges that represent different threshold levels over which measurement is mapped to.
  * Value 1 denotes a lowest threshold level that is reached.
  * For example eureka client registry data staleness defines thresholds 30s, 60s, 120s, 240s, 480s. Delay of 90s

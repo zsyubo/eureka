@@ -89,6 +89,11 @@ import com.netflix.servo.monitor.Monitors;
 import com.netflix.servo.monitor.Stopwatch;
 
 /**
+ * 该类对与Eureka服务器的交互很重要。
+ * Eureka客户端负责 a) 向Eureka服务器注册实例 b) 向Eureka服务器续租 c) 在关闭期间从Eureka服务器取消租约 d) 查询在Eureka服务器上注册的服务/实例的列表。
+ * Eureka客户端需要一个配置好的Eureka服务器java.net.URLs列表来进行对话。这些java.net.URLs通常是amazon弹性eips，不会改变。上面定义的所有功能在失败的情况下都会故障转移到列表中指定的其他java.net.URLs。
+ *
+ *
  * The class that is instrumental for interactions with <tt>Eureka Server</tt>.
  *
  * <p>
@@ -356,13 +361,14 @@ public class DiscoveryClient implements EurekaClient {
 
         remoteRegionsToFetch = new AtomicReference<String>(clientConfig.fetchRegistryForRemoteRegions());
         remoteRegionsRef = new AtomicReference<>(remoteRegionsToFetch.get() == null ? null : remoteRegionsToFetch.get().split(","));
-
+        // 表示该客户端是否应从eureka服务器获取eureka注册表信息。
         if (config.shouldFetchRegistry()) {
             this.registryStalenessMonitor = new ThresholdLevelsMetric(this, METRIC_REGISTRY_PREFIX + "lastUpdateSec_", new long[]{15L, 30L, 60L, 120L, 240L, 480L});
         } else {
             this.registryStalenessMonitor = ThresholdLevelsMetric.NO_OP_METRIC;
         }
 
+        // 是否需要注册到 eureka server上
         if (config.shouldRegisterWithEureka()) {
             this.heartbeatStalenessMonitor = new ThresholdLevelsMetric(this, METRIC_REGISTRATION_PREFIX + "lastHeartbeatSec_", new long[]{15L, 30L, 60L, 120L, 240L, 480L});
         } else {
@@ -371,6 +377,7 @@ public class DiscoveryClient implements EurekaClient {
 
         logger.info("Initializing Eureka in region {}", clientConfig.getRegion());
 
+        // 不需要注册到eureka  && 不需要从eureka获取注册表
         if (!config.shouldRegisterWithEureka() && !config.shouldFetchRegistry()) {
             logger.info("Client configured to neither register nor query for data.");
             scheduler = null;
@@ -389,7 +396,7 @@ public class DiscoveryClient implements EurekaClient {
             registrySize = initRegistrySize;
             logger.info("Discovery Client initialized at timestamp {} with initial instances count: {}",
                     initTimestampMs, initRegistrySize);
-
+            // 撒事都不做直接返回
             return;  // no need to setup up an network tasks and we are done
         }
 
@@ -400,7 +407,7 @@ public class DiscoveryClient implements EurekaClient {
                             .setNameFormat("DiscoveryClient-%d")
                             .setDaemon(true)
                             .build());
-
+            // 心跳
             heartbeatExecutor = new ThreadPoolExecutor(
                     1, clientConfig.getHeartbeatExecutorThreadPoolSize(), 0, TimeUnit.SECONDS,
                     new SynchronousQueue<Runnable>(),
@@ -409,7 +416,7 @@ public class DiscoveryClient implements EurekaClient {
                             .setDaemon(true)
                             .build()
             );  // use direct handoff
-
+            // 刷新缓存
             cacheRefreshExecutor = new ThreadPoolExecutor(
                     1, clientConfig.getCacheRefreshExecutorThreadPoolSize(), 0, TimeUnit.SECONDS,
                     new SynchronousQueue<Runnable>(),
@@ -420,6 +427,7 @@ public class DiscoveryClient implements EurekaClient {
             );  // use direct handoff
 
             eurekaTransport = new EurekaTransport();
+            // 初始化httpsclient一些相关的吧
             scheduleServerEndpointTask(eurekaTransport, args);
 
             AzToRegionMapper azToRegionMapper;
@@ -493,6 +501,12 @@ public class DiscoveryClient implements EurekaClient {
                 initTimestampMs, initRegistrySize);
     }
 
+    /**
+     * 构建client。。注册httpclient和拉取注册表client
+     * 用户client 和server作交互的
+     * @param eurekaTransport
+     * @param args
+     */
     private void scheduleServerEndpointTask(EurekaTransport eurekaTransport,
                                             AbstractDiscoveryClientOptionalArgs args) {
 
@@ -552,6 +566,7 @@ public class DiscoveryClient implements EurekaClient {
                 endpointRandomizer
         );
 
+        // 注册到eureka
         if (clientConfig.shouldRegisterWithEureka()) {
             EurekaHttpClientFactory newRegistrationClientFactory = null;
             EurekaHttpClient newRegistrationClient = null;
@@ -571,6 +586,7 @@ public class DiscoveryClient implements EurekaClient {
 
         // new method (resolve from primary servers for read)
         // Configure new transport layer (candidate for injecting in the future)
+        // 拉取注册表
         if (clientConfig.shouldFetchRegistry()) {
             EurekaHttpClientFactory newQueryClientFactory = null;
             EurekaHttpClient newQueryClient = null;

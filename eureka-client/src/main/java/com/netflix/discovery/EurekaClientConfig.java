@@ -271,6 +271,9 @@ public interface EurekaClientConfig {
     boolean shouldUseDnsForFetchingServiceUrls();
 
     /**
+     * 表示该实例是否应向eureka服务器注册其信息以便被其他人发现。
+     * 在某些情况下，你不希望你的实例被发现，而你只想发现其他实例。
+     *
      * Indicates whether or not this instance should register its information
      * with eureka server for discovery by others.
      *
@@ -450,6 +453,8 @@ public interface EurekaClientConfig {
     int getEurekaConnectionIdleTimeoutSeconds();
 
     /**
+     * 表示该客户端是否应从eureka服务器获取eureka注册表信息。
+     *
      * Indicates whether this client should fetch eureka registry information from eureka server.
      *
      * @return {@code true} if registry information has to be fetched, {@code false} otherwise.
@@ -478,6 +483,8 @@ public interface EurekaClientConfig {
     String getRegistryRefreshSingleVipAddress();
 
     /**
+     * 用来初始化心跳执行器的线程池大小。
+     *
      * The thread pool size for the heartbeatExecutor to initialise with
      *
      * @return the heartbeatExecutor thread pool size
@@ -494,6 +501,8 @@ public interface EurekaClientConfig {
     int getHeartbeatExecutorExponentialBackOffBound();
 
     /**
+     * 用来初始化cacheRefreshExecutor的线程池大小。
+     *
      * The thread pool size for the cacheRefreshExecutor to initialise with
      *
      * @return the cacheRefreshExecutor thread pool size
