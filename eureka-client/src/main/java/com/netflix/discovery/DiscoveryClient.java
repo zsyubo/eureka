@@ -158,7 +158,7 @@ public class DiscoveryClient implements EurekaClient {
     private final Provider<HealthCheckHandler> healthCheckHandlerProvider;
     private final Provider<HealthCheckCallback> healthCheckCallbackProvider;
     private final PreRegistrationHandler preRegistrationHandler;
-    private final AtomicReference<Applications> localRegionApps = new AtomicReference<Applications>();
+    private final AtomicReference<Applications> localRegionApps = new AtomicReference<Applications>(); // 存储的从server拉取的注册表
     private final Lock fetchRegistryUpdateLock = new ReentrantLock();
     // monotonically increasing generation counter to ensure stale threads do not reset registry to an older version
     private final AtomicLong fetchRegistryGeneration;
@@ -203,11 +203,11 @@ public class DiscoveryClient implements EurekaClient {
         private ClosableResolver bootstrapResolver;
         private TransportClientFactory transportClientFactory;
 
-        private EurekaHttpClient registrationClient;
-        private EurekaHttpClientFactory registrationClientFactory;
+        private EurekaHttpClient registrationClient;  // SessionedEurekaHttpClient
+        private EurekaHttpClientFactory registrationClientFactory;  // registrationClientFactory --调用--> canonicalClientFactory
 
-        private EurekaHttpClient queryClient;
-        private EurekaHttpClientFactory queryClientFactory;
+        private EurekaHttpClient queryClient;  // SessionedEurekaHttpClient
+        private EurekaHttpClientFactory queryClientFactory; //  canonicalClientFactory
 
         void shutdown() {
             if (registrationClientFactory != null) {
@@ -443,7 +443,7 @@ public class DiscoveryClient implements EurekaClient {
         } catch (Throwable e) {
             throw new RuntimeException("Failed to initialize DiscoveryClient!", e);
         }
-
+        // 拉取注册表
         if (clientConfig.shouldFetchRegistry()) {
             try {
                 boolean primaryFetchRegistryResult = fetchRegistry(false);
@@ -994,6 +994,9 @@ public class DiscoveryClient implements EurekaClient {
     }
 
     /**
+     * 抓取注册表信息。
+     * 除非在协调eureka服务器和客户端的注册表信息方面有问题，否则该方法会在第一次获取后尝试只获取deltas。
+     *
      * Fetches the registry information.
      *
      * <p>
@@ -1012,13 +1015,13 @@ public class DiscoveryClient implements EurekaClient {
             // If the delta is disabled or if it is the first time, get all
             // applications
             Applications applications = getApplications();
-
-            if (clientConfig.shouldDisableDelta()
-                    || (!Strings.isNullOrEmpty(clientConfig.getRegistryRefreshSingleVipAddress()))
-                    || forceFullRegistryFetch
-                    || (applications == null)
-                    || (applications.getRegisteredApplications().size() == 0)
-                    || (applications.getVersion() == -1)) //Client application does not have latest library supporting delta
+            // 主要有一个条件满足就ok
+            if (clientConfig.shouldDisableDelta()  // false
+                    || (!Strings.isNullOrEmpty(clientConfig.getRegistryRefreshSingleVipAddress()))  //  有虚拟ip？
+                    || forceFullRegistryFetch  // 第一次是false
+                    || (applications == null) // false
+                    || (applications.getRegisteredApplications().size() == 0) // client启动时，为0
+                    || (applications.getVersion() == -1)) //Client application does not have latest library supporting delta  客户端应用程序没有支持delta(增量同步)的最新库
             {
                 logger.info("Disable delta property : {}", clientConfig.shouldDisableDelta());
                 logger.info("Single vip registry refresh property : {}", clientConfig.getRegistryRefreshSingleVipAddress());
@@ -1027,10 +1030,13 @@ public class DiscoveryClient implements EurekaClient {
                 logger.info("Registered Applications size is zero : {}",
                         (applications.getRegisteredApplications().size() == 0));
                 logger.info("Application version is -1: {}", (applications.getVersion() == -1));
+
+                // 全量同步
                 getAndStoreFullRegistry();
             } else {
                 getAndUpdateDelta(applications);
             }
+            // 计算hashCode 并赋值
             applications.setAppsHashCode(applications.getReconcileHashCode());
             logTotalInstances();
         } catch (Throwable e) {
@@ -1096,6 +1102,8 @@ public class DiscoveryClient implements EurekaClient {
     }
 
     /**
+     * 从eureka服务器获取完整的注册表信息并存储在本地。当应用完整的注册表时，会观察到以下流程：如果（更新生成尚未推进（由于另一个线程））原子地将注册表设置为新的注册表
+     *
      * Gets the full registry information from the eureka server and stores it locally.
      * When applying the full registry, the following flow is observed:
      *
@@ -1114,7 +1122,7 @@ public class DiscoveryClient implements EurekaClient {
 
         Applications apps = null;
         EurekaHttpResponse<Applications> httpResponse = clientConfig.getRegistryRefreshSingleVipAddress() == null
-                ? eurekaTransport.queryClient.getApplications(remoteRegionsRef.get())
+                ? eurekaTransport.queryClient.getApplications(remoteRegionsRef.get())  // EurekaHttpClientDecorator#getApplications
                 : eurekaTransport.queryClient.getVip(clientConfig.getRegistryRefreshSingleVipAddress(), remoteRegionsRef.get());
         if (httpResponse.getStatusCode() == Status.OK.getStatusCode()) {
             apps = httpResponse.getEntity();
@@ -1124,6 +1132,7 @@ public class DiscoveryClient implements EurekaClient {
         if (apps == null) {
             logger.error("The application is null for some reason. Not storing this information");
         } else if (fetchRegistryGeneration.compareAndSet(currentUpdateGeneration, currentUpdateGeneration + 1)) {
+            // 进行设置
             localRegionApps.set(this.filterAndShuffle(apps));
             logger.debug("Got full registry with apps hashcode {}", apps.getAppsHashCode());
         } else {
@@ -1181,9 +1190,12 @@ public class DiscoveryClient implements EurekaClient {
     }
 
     /**
+     * 记录本地存储的未经过滤的实例总数。
+     *
      * Logs the total number of non-filtered instances stored locally.
      */
     private void logTotalInstances() {
+        // todo 有问题啊，localRegionApps中不是存储的UP状态的服务实例么？
         if (logger.isDebugEnabled()) {
             int totInstances = 0;
             for (Application application : getApplications().getRegisteredApplications()) {
@@ -1622,6 +1634,9 @@ public class DiscoveryClient implements EurekaClient {
     }
 
     /**
+     * 在过滤只有UP状态的应用程序并对其进行洗牌后获取应用程序。
+     * 过滤取决于配置EurekaClientConfig.shouldFilterOnlyUpInstances()所指定的选项。洗牌有助于随机化应用程序列表，从而避免相同的实例在启动时收到流量。
+     *
      * Gets the <em>applications</em> after filtering the applications for
      * instances with only UP states and shuffling them.
      *

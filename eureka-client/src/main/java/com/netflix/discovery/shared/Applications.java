@@ -228,6 +228,8 @@ public class Applications {
     }
 
     /**
+     * 获取此应用程序实例的哈希代码。用于比较eureka服务器和eureka客户端之间的实例。
+     *
      * Gets the hash code for this <em>applications</em> instance. Used for
      * comparison of instances between eureka server and eureka client.
      *

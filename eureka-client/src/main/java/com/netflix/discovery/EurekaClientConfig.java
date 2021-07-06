@@ -353,6 +353,11 @@ public interface EurekaClientConfig {
     boolean shouldLogDeltaDiff();
 
     /**
+     * delta在这里可以认为是增量同步
+     * 指示eureka客户端是否应禁用delta的获取，而应诉诸于获取完整的注册表信息。
+     * 注意，delta获取可以极大地减少流量，因为eureka服务器的变化率通常比获取率低得多。
+     * 这些变化在运行时在getRegistryFetchIntervalSeconds()指定的下一个注册表获取周期生效。
+     *
      * Indicates whether the eureka client should disable fetching of delta and
      * should rather resort to getting the full registry information.
      *
