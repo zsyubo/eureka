@@ -146,6 +146,8 @@ public class Application {
     }
 
     /**
+     * 获取与此特定应用相关的非洗牌和非过滤的实例列表。
+     *
      * Gets the list of non-shuffled and non-filtered instances associated with this particular
      * application.
      *
