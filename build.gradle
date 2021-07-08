@@ -148,6 +148,18 @@ subprojects {
         jcenter()
     }
 
+    javadoc {
+        options.encoding = 'UTF-8'
+    }
+
+    tasks.withType(JavaCompile) {
+        options.encoding = "UTF-8"
+        options.compilerArgs << "-Xlint:unchecked"
+        compileJava.options.encoding = 'UTF-8'
+        compileTestJava.options.encoding = 'UTF-8'
+    }
+
+
     test {
         forkEvery = 1
         // setting this property prevents java from grabbing focus when running the tests under osx
