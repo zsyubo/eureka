@@ -279,6 +279,8 @@ public class Applications {
     }
 
     /**
+     * 对所提供的实例进行洗牌，以便它们不会总是以相同的顺序被返回。
+     *
      * Shuffles the provided instances so that they will not always be returned
      * in the same order.
      * 

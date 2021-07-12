@@ -56,6 +56,8 @@ import com.netflix.discovery.shared.transport.EurekaTransportConfig;
 public interface EurekaClientConfig {
 
     /**
+     * 从eureka服务器获取注册表信息的频率（以秒为单位）。
+     *
      * Indicates how often(in seconds) to fetch the registry information from
      * the eureka server.
      *
@@ -377,6 +379,8 @@ public interface EurekaClientConfig {
     boolean shouldDisableDelta();
 
     /**
+     * 逗号分隔的区域列表，将为其获取eureka注册表信息。必须为这些区域中的每一个定义可用性区域，正如getAvailabilityZones（String）所返回的那样。如果不这样做，将导致发现客户端启动失败。
+     *
      * Comma separated list of regions for which the eureka registry information will be fetched. It is mandatory to
      * define the availability zones for each of these regions as returned by {@link #getAvailabilityZones(String)}.
      * Failing to do so, will result in failure of discovery client startup.
@@ -515,6 +519,8 @@ public interface EurekaClientConfig {
     int getCacheRefreshExecutorThreadPoolSize();
 
     /**
+     * 缓存刷新执行器的指数回退相关属性。它是重试延迟的最大乘数值，在发生一系列超时的情况下。默认值10次
+     *
      * Cache refresh executor exponential back off related property.
      * It is a maximum multiplier value for retry delay, in case where a sequence of timeouts
      * occurred.
