@@ -17,6 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 一个监督者任务，在执行超时的同时安排子任务。包裹的子任务必须是线程安全的
+ *
  * A supervisor task that schedules subtasks while enforce a timeout.
  * Wrapped subtasks must be thread safe.
  *
@@ -72,9 +74,9 @@ public class TimedSupervisorTask extends TimerTask {
         } catch (TimeoutException e) {
             logger.warn("task supervisor timed out", e);
             timeoutCounter.increment();
-
+            // 如果出现了 timeout，那么采用2倍时间进行重试
             long currentDelay = delay.get();
-            long newDelay = Math.min(maxDelay, currentDelay * 2);
+            long newDelay = Math.min(maxDelay, currentDelay * 2);//
             delay.compareAndSet(currentDelay, newDelay);
 
         } catch (RejectedExecutionException e) {
@@ -99,6 +101,7 @@ public class TimedSupervisorTask extends TimerTask {
             }
 
             if (!scheduler.isShutdown()) {
+                // 调用
                 scheduler.schedule(this, delay.get(), TimeUnit.MILLISECONDS);
             }
         }

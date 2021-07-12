@@ -22,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import com.thoughtworks.xstream.annotations.XStreamOmitField;
 
 /**
+ * 代表Eureka的租赁信息。Eureka根据EurekaInstanceConfig.getLeaseExpirationDurationInSeconds()中设置的持续时间来决定是否将该实例从其视图中移除，该持续时间在此租约中持有。该租约还跟踪它最后一次被更新的时间。
+ *
  * Represents the <em>lease</em> information with <em>Eureka</em>.
  *
  * <p>
@@ -226,6 +228,8 @@ public class LeaseInfo {
     }
 
     /**
+     * 返回客户指定的更新间隔设置。默认30秒
+     *
      * Returns client specified setting for renew interval.
      *
      * @return time in milliseconds since epoch.

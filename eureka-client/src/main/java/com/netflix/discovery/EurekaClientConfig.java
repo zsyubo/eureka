@@ -66,6 +66,8 @@ public interface EurekaClientConfig {
     int getRegistryFetchIntervalSeconds();
 
     /**
+     * 指示复制实例变化到eureka服务器的频率（以秒为单位）。默认30秒
+     *
      * Indicates how often(in seconds) to replicate instance changes to be
      * replicated to the eureka server.
      *
@@ -74,6 +76,8 @@ public interface EurekaClientConfig {
     int getInstanceInfoReplicationIntervalSeconds();
 
     /**
+     * 指示最初多久（以秒为单位）将实例信息复制到eureka服务器。默认40秒
+     *
      * Indicates how long initially (in seconds) to replicate instance info
      * to the eureka server
      */
@@ -501,6 +505,8 @@ public interface EurekaClientConfig {
     int getHeartbeatExecutorThreadPoolSize();
 
     /**
+     * 心跳执行器的指数回退相关属性。它是重试延迟的最大乘数值，在发生一系列超时的情况下。默认10
+     *
      * Heartbeat executor exponential back off related property.
      * It is a maximum multiplier value for retry delay, in case where a sequence of timeouts
      * occurred.

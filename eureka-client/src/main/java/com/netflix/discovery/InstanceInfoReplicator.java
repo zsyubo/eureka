@@ -15,6 +15,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
+ * 一个用于更新和复制本地实例信息到远程服务器的任务。这个任务的属性是。
+ * - 可以通过onDemandUpdate()按需安排更新任务
+ * - 任务处理受burstSize的限制
+ * - 新的更新任务总是在较早的更新任务后自动安排。然而，如果一个按需任务被启动，预定的自动更新任务将被丢弃（在新的按需更新之后，将预定一个新的任务）。
+ *
  * A task for updating and replicating the local instanceinfo to the remote server. Properties of this task are:
  * - configured with a single update thread to guarantee sequential update to the remote server
  * - update tasks can be scheduled on-demand via onDemandUpdate()

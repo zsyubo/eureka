@@ -185,7 +185,7 @@ public class DiscoveryClient implements EurekaClient {
 
     private volatile int registrySize = 0;
     private volatile long lastSuccessfulRegistryFetchTimestamp = -1;
-    private volatile long lastSuccessfulHeartbeatTimestamp = -1;
+    private volatile long lastSuccessfulHeartbeatTimestamp = -1;  // 最后更新成功时间
     private final ThresholdLevelsMetric heartbeatStalenessMonitor;
     private final ThresholdLevelsMetric registryStalenessMonitor;
 
@@ -1361,7 +1361,7 @@ public class DiscoveryClient implements EurekaClient {
             // 只执行一次，第二次是在TimedSupervisorTask去执行
             scheduler.schedule(
                     cacheRefreshTask,
-                    registryFetchIntervalSeconds, TimeUnit.SECONDS);
+                    registryFetchIntervalSeconds, TimeUnit.SECONDS); // schedule: 创建并执行一个一次性动作，在给定的延迟后开始启用
         }
 
         // 注册应用到eureka server
@@ -1389,7 +1389,7 @@ public class DiscoveryClient implements EurekaClient {
             instanceInfoReplicator = new InstanceInfoReplicator(
                     this,
                     instanceInfo,
-                    clientConfig.getInstanceInfoReplicationIntervalSeconds(),
+                    clientConfig.getInstanceInfoReplicationIntervalSeconds(),  // 默认30秒
                     2); // burstSize
 
             statusChangeListener = new ApplicationInfoManager.StatusChangeListener() {
@@ -1479,6 +1479,8 @@ public class DiscoveryClient implements EurekaClient {
     }
 
     /**
+     * 刷新当前的本地instanceInfo。请注意，在观察到变化的有效刷新后，instanceInfo上的isDirty标志被设置为true。
+     *
      * Refresh the current local instanceInfo. Note that after a valid refresh where changes are observed, the
      * isDirty flag on the instanceInfo is set to true
      */
@@ -1555,11 +1557,11 @@ public class DiscoveryClient implements EurekaClient {
     @VisibleForTesting
     void refreshRegistry() {
         try {
-            boolean isFetchingRemoteRegionRegistries = isFetchingRemoteRegionRegistries();
+            boolean isFetchingRemoteRegionRegistries = isFetchingRemoteRegionRegistries();  // false
 
             boolean remoteRegionsModified = false;
             // This makes sure that a dynamic change to remote regions to fetch is honored.
-            String latestRemoteRegions = clientConfig.fetchRegistryForRemoteRegions();
+            String latestRemoteRegions = clientConfig.fetchRegistryForRemoteRegions();  // 默认为null
             if (null != latestRemoteRegions) {
                 String currentRemoteRegions = remoteRegionsToFetch.get();
                 if (!latestRemoteRegions.equals(currentRemoteRegions)) {
