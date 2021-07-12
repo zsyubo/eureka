@@ -42,3 +42,13 @@ dependencies {
     testCompile "org.assertj:assertj-core:3.11.1"
     testCompile "javax.servlet:javax.servlet-api:4.0.1"
 }
+
+//skip Test tasks
+gradle.taskGraph.whenReady {
+    tasks.each { task ->
+        if (task.name.contains("test"))
+        {
+            task.enabled = false
+        }
+    }
+}

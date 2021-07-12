@@ -39,3 +39,13 @@ dependencies {
     testCompile "org.mockito:mockito-core:${mockitoVersion}"
     testCompile "com.netflix.governator:governator:${governatorVersion}"
 }
+
+//skip Test tasks
+gradle.taskGraph.whenReady {
+    tasks.each { task ->
+        if (task.name.contains("test"))
+        {
+            task.enabled = false
+        }
+    }
+}

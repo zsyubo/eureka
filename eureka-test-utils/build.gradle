@@ -3,3 +3,13 @@ dependencies {
     compile "junit:junit:${junit_version}"
     compile "org.mockito:mockito-core:${mockitoVersion}"
 }
+
+//skip Test tasks
+gradle.taskGraph.whenReady {
+    tasks.each { task ->
+        if (task.name.contains("test"))
+        {
+            task.enabled = false
+        }
+    }
+}

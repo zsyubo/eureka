@@ -19,10 +19,23 @@ dependencies {
     testCompile "org.eclipse.jetty:jetty-webapp:$jetty_version"
 }
 
+//skip Test tasks
+gradle.taskGraph.whenReady {
+    tasks.each { task ->
+        if (task.name.contains("test"))
+        {
+            task.enabled = false
+        }
+    }
+}
+
+
 task copyLibs(type: Copy) {
     into 'testlibs/WEB-INF/libs'
     from configurations.runtime
 }
+
+
 
 war {
     from (project(':eureka-resources').file('build/resources/main'))
