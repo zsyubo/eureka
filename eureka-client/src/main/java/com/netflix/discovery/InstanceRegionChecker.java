@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 实例region工具
  * @author Nitesh Kant
  */
 public class InstanceRegionChecker {
@@ -23,6 +24,14 @@ public class InstanceRegionChecker {
         this.localRegion = localRegion;
     }
 
+    /**
+     * 获取instance的region信息。
+     *
+     * @param instanceInfo
+     * @return java.lang.String
+     * @author 远山(胡元富)
+     * @date 2021/7/13
+     **/
     @Nullable
     public String getInstanceRegion(InstanceInfo instanceInfo) {
         if (instanceInfo.getDataCenterInfo() == null || instanceInfo.getDataCenterInfo().getName() == null) {

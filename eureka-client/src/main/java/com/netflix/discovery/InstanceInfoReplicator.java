@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
+ *  上报自己状态变更
  * 一个用于更新和复制本地实例信息到远程服务器的任务。这个任务的属性是。
  * - 可以通过onDemandUpdate()按需安排更新任务
  * - 任务处理受burstSize的限制

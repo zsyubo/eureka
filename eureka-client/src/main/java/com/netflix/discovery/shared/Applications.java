@@ -143,6 +143,8 @@ public class Applications {
     }
 
     /**
+     * 获取给定应用程序名称的注册应用程序。
+     *
      * Gets the registered <em>application</em> for the given
      * application name.
      *

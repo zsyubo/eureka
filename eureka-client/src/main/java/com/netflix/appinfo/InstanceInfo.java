@@ -1011,6 +1011,7 @@ public class InstanceInfo {
     }
 
     /**
+     * 返回数据中心的信息，识别它是否是AWS。
      * Returns data center information identifying if it is AWS or not.
      *
      * @return the data center information.
@@ -1260,6 +1261,8 @@ public class InstanceInfo {
     }
 
     /**
+     * 设置dirty标志，以便实例信息可以在下一次心跳时被传送到发现服务器。
+     *
      * Sets the dirty flag so that the instance information can be carried to
      * the discovery server on the next heartbeat.
      */
@@ -1321,6 +1324,8 @@ public class InstanceInfo {
     }
 
     /**
+     * 返回在服务器中对实例所做的动作的类型。主要用于更新com.netflix.discovery.EurekaClient实例中的deltas。
+     *
      * Returns the type of action done on the instance in the server.Primarily
      * used for updating deltas in the {@link com.netflix.discovery.EurekaClient}
      * instance.
