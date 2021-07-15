@@ -84,9 +84,9 @@ public final class EurekaHttpClients {
                                 name,
                                 transportConfig,
                                 clusterResolver,
-                                RedirectingEurekaHttpClient.createFactory(transportClientFactory),
+                                RedirectingEurekaHttpClient.createFactory(transportClientFactory), // TransportClientFactory
                                 ServerStatusEvaluators.legacyEvaluator()),
-                        transportConfig.getSessionedClientReconnectIntervalSeconds() * 1000
+                        transportConfig.getSessionedClientReconnectIntervalSeconds() * 1000   // 1200*1000
                 );
             }
 

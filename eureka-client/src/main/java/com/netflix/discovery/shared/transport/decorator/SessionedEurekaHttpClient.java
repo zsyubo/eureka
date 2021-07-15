@@ -32,6 +32,10 @@ import org.slf4j.LoggerFactory;
 import static com.netflix.discovery.EurekaClientNames.METRIC_TRANSPORT_PREFIX;
 
 /**
+ * 看了下代码，这个HttpClient
+ *
+ * SessionedEurekaHttpClient在一个固定的时间间隔（会话）强制执行完全的重新连接，防止客户端永远停留在一个特定的Eureka服务器实例。这反过来又保证了在集群拓扑结构发生变化时负载的均匀分布。
+ *
  * {@link SessionedEurekaHttpClient} enforces full reconnect at a regular interval (a session), preventing
  * a client to sticking to a particular Eureka server instance forever. This in turn guarantees even
  * load distribution in case of cluster topology change.
@@ -44,35 +48,35 @@ public class SessionedEurekaHttpClient extends EurekaHttpClientDecorator {
     private final Random random = new Random();
 
     private final String name;
-    private final EurekaHttpClientFactory clientFactory;
-    private final long sessionDurationMs;
-    private volatile long currentSessionDurationMs;
+    private final EurekaHttpClientFactory clientFactory; // 还嵌套一个
+    private final long sessionDurationMs;  // session过期时间配置，默认是1200秒
+    private volatile long currentSessionDurationMs; // 当前session过期时间
 
     private volatile long lastReconnectTimeStamp = -1;
     private final AtomicReference<EurekaHttpClient> eurekaHttpClientRef = new AtomicReference<>();
 
     public SessionedEurekaHttpClient(String name, EurekaHttpClientFactory clientFactory, long sessionDurationMs) {
         this.name = name;
-        this.clientFactory = clientFactory;
-        this.sessionDurationMs = sessionDurationMs;
-        this.currentSessionDurationMs = randomizeSessionDuration(sessionDurationMs);
+        this.clientFactory = clientFactory;// RetryableEurekaHttpClient.createFactory
+        this.sessionDurationMs = sessionDurationMs;// 1200*1000
+        this.currentSessionDurationMs = randomizeSessionDuration(sessionDurationMs);// 计算一个随机值？ 难道是session过期时间？
         Monitors.registerObject(name, this);
     }
 
     @Override
     protected <R> EurekaHttpResponse<R> execute(RequestExecutor<R> requestExecutor) {
         long now = System.currentTimeMillis();
-        long delay = now - lastReconnectTimeStamp;
-        if (delay >= currentSessionDurationMs) {
+        long delay = now - lastReconnectTimeStamp; // 计算时间间隔
+        if (delay >= currentSessionDurationMs) { // 如果大于session过期时间
             logger.debug("Ending a session and starting anew");
             lastReconnectTimeStamp = now;
-            currentSessionDurationMs = randomizeSessionDuration(sessionDurationMs);
+            currentSessionDurationMs = randomizeSessionDuration(sessionDurationMs); // 起算下一次session过期时间
             TransportUtils.shutdown(eurekaHttpClientRef.getAndSet(null));
         }
 
-        EurekaHttpClient eurekaHttpClient = eurekaHttpClientRef.get();
+        EurekaHttpClient eurekaHttpClient = eurekaHttpClientRef.get();  // RetryableEurekaHttpClient
         if (eurekaHttpClient == null) {
-            eurekaHttpClient = TransportUtils.getOrSetAnotherClient(eurekaHttpClientRef, clientFactory.newClient());
+            eurekaHttpClient = TransportUtils.getOrSetAnotherClient(eurekaHttpClientRef, clientFactory.newClient());  // RetryableEurekaHttpClient
         }
         return requestExecutor.execute(eurekaHttpClient);
     }
@@ -86,6 +90,7 @@ public class SessionedEurekaHttpClient extends EurekaHttpClientDecorator {
     }
 
     /**
+     * 一个随机的sessionDuration，以ms为单位，在[0, sessionDurationMs/2]中计算+/-一个额外的量。
      * @return a randomized sessionDuration in ms calculated as +/- an additional amount in [0, sessionDurationMs/2]
      */
     protected long randomizeSessionDuration(long sessionDurationMs) {

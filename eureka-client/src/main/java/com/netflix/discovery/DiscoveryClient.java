@@ -203,10 +203,10 @@ public class DiscoveryClient implements EurekaClient {
         private ClosableResolver bootstrapResolver;
         private TransportClientFactory transportClientFactory;
 
-        private EurekaHttpClient registrationClient;  // SessionedEurekaHttpClient
+        private EurekaHttpClient registrationClient;  // SessionedEurekaHttpClient --> RetryableEurekaHttpClient
         private EurekaHttpClientFactory registrationClientFactory;  // registrationClientFactory --调用--> canonicalClientFactory
 
-        private EurekaHttpClient queryClient;  // SessionedEurekaHttpClient
+        private EurekaHttpClient queryClient;  // SessionedEurekaHttpClient --> RetryableEurekaHttpClient
         private EurekaHttpClientFactory queryClientFactory; //  canonicalClientFactory
 
         void shutdown() {
@@ -541,8 +541,9 @@ public class DiscoveryClient implements EurekaClient {
                 : args.getHostnameVerifier();
 
         // If the transport factory was not supplied with args, assume they are using jersey 1 for passivity
+        //
         eurekaTransport.transportClientFactory = providedJerseyClient == null
-                ? transportClientFactories.newTransportClientFactory(clientConfig, additionalFilters, applicationInfoManager.getInfo(), sslContext, hostnameVerifier)
+                ? transportClientFactories.newTransportClientFactory(clientConfig, additionalFilters, applicationInfoManager.getInfo(), sslContext, hostnameVerifier)  // Jersey1TransportClientFactories.newTransportClientFactory
                 : transportClientFactories.newTransportClientFactory(additionalFilters, providedJerseyClient);
 
         ApplicationsResolver.ApplicationsSource applicationsSource = new ApplicationsResolver.ApplicationsSource() {
@@ -559,7 +560,7 @@ public class DiscoveryClient implements EurekaClient {
                 }
             }
         };
-
+        // 根解析器？
         eurekaTransport.bootstrapResolver = EurekaHttpClients.newBootstrapResolver(
                 clientConfig,
                 transportConfig,

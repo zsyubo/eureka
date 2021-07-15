@@ -134,7 +134,7 @@ public class JerseyEurekaHttpClientFactory implements TransportClientFactory {
                                                        AbstractEurekaIdentity clientIdentity,
                                                        Optional<SSLContext> sslContext,
                                                        Optional<HostnameVerifier> hostnameVerifier) {
-        boolean useExperimental = "true".equals(clientConfig.getExperimental("JerseyEurekaHttpClientFactory.useNewBuilder"));
+        boolean useExperimental = "true".equals(clientConfig.getExperimental("JerseyEurekaHttpClientFactory.useNewBuilder"));  // false
 
         JerseyEurekaHttpClientFactoryBuilder clientBuilder = (useExperimental ? experimentalBuilder() : newBuilder())
                 .withAdditionalFilters(additionalFilters)
@@ -155,6 +155,7 @@ public class JerseyEurekaHttpClientFactory implements TransportClientFactory {
                             clientConfig.getProxyUserName(), clientConfig.getProxyPassword()
                     );
         } else {
+            // 进这个
             clientBuilder.withClientName("DiscoveryClient-HTTPClient");
         }
 
@@ -191,14 +192,14 @@ public class JerseyEurekaHttpClientFactory implements TransportClientFactory {
         @Override
         public JerseyEurekaHttpClientFactory build() {
             Map<String, String> additionalHeaders = new HashMap<>();
-            if (allowRedirect) {
+            if (allowRedirect) { // 不进
                 additionalHeaders.put(HTTP_X_DISCOVERY_ALLOW_REDIRECT, "true");
             }
-            if (EurekaAccept.compact == eurekaAccept) {
+            if (EurekaAccept.compact == eurekaAccept) {// 不进
                 additionalHeaders.put(EurekaAccept.HTTP_X_EUREKA_ACCEPT, eurekaAccept.name());
             }
 
-            if (experimental) {
+            if (experimental) { // 不进
                 return buildExperimental(additionalHeaders);
             }
             return buildLegacy(additionalHeaders, systemSSL);
@@ -299,7 +300,7 @@ public class JerseyEurekaHttpClientFactory implements TransportClientFactory {
 
         private void addFilters(ApacheHttpClient4 discoveryApacheClient) {
             // Add gzip content encoding support
-            discoveryApacheClient.addFilter(new GZIPContentEncodingFilter(false));
+            discoveryApacheClient.addFilter(new GZIPContentEncodingFilter(false));  // 默认关闭了GZIP
 
             // always enable client identity headers
             String ip = myInstanceInfo == null ? null : myInstanceInfo.getIPAddr();

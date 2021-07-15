@@ -52,7 +52,7 @@ public class RedirectingEurekaHttpClient extends EurekaHttpClientDecorator {
     private static final Pattern REDIRECT_PATH_REGEX = Pattern.compile("(.*/v2/)apps(/.*)?$");
 
     private final EurekaEndpoint serviceEndpoint;
-    private final TransportClientFactory factory;
+    private final TransportClientFactory factory; // Jersey1TransportClientFactories
     private final DnsService dnsService;
 
     private final AtomicReference<EurekaHttpClient> delegateRef = new AtomicReference<>();
@@ -74,6 +74,7 @@ public class RedirectingEurekaHttpClient extends EurekaHttpClientDecorator {
     @Override
     protected <R> EurekaHttpResponse<R> execute(RequestExecutor<R> requestExecutor) {
         EurekaHttpClient currentEurekaClient = delegateRef.get();
+        // 如果没有EurekaHttpClient ，则进行初始化
         if (currentEurekaClient == null) {
             AtomicReference<EurekaHttpClient> currentEurekaClientRef = new AtomicReference<>(factory.newClient(serviceEndpoint));
             try {
