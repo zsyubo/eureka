@@ -90,7 +90,7 @@ public class JerseyEurekaHttpClientFactory implements TransportClientFactory {
 
     private JerseyEurekaHttpClientFactory(EurekaJerseyClient jerseyClient,
                                           ApacheHttpClient4 apacheClient,
-                                          long connectionIdleTimeout,
+                                          long connectionIdleTimeout, // -1
                                           Map<String, String> additionalHeaders) {
         this.jerseyClient = jerseyClient;
         this.apacheClient = jerseyClient != null ? jerseyClient.getClient() : apacheClient;
@@ -99,6 +99,7 @@ public class JerseyEurekaHttpClientFactory implements TransportClientFactory {
             // the jersey client contains a cleaner already so only create this cleaner if we don't have a jersey client
             this.cleaner = new ApacheHttpClientConnectionCleaner(this.apacheClient, connectionIdleTimeout);
         } else {
+            // 正常走着， 因为cleaner在EurekaJerseyClient初始化是就一起初始化了
             this.cleaner = null;
         }
     }
@@ -202,7 +203,7 @@ public class JerseyEurekaHttpClientFactory implements TransportClientFactory {
             if (experimental) { // 不进
                 return buildExperimental(additionalHeaders);
             }
-            return buildLegacy(additionalHeaders, systemSSL);
+            return buildLegacy(additionalHeaders, systemSSL); // JerseyEurekaHttpClientFactory
         }
 
         private JerseyEurekaHttpClientFactory buildLegacy(Map<String, String> additionalHeaders, boolean systemSSL) {
@@ -229,7 +230,9 @@ public class JerseyEurekaHttpClientFactory implements TransportClientFactory {
             }
 
             EurekaJerseyClient jerseyClient = clientBuilder.build();
+            // 底层是使用的 ApacheHttpClient4
             ApacheHttpClient4 discoveryApacheClient = jerseyClient.getClient();
+            // 添加过滤器链
             addFilters(discoveryApacheClient);
 
             return new JerseyEurekaHttpClientFactory(jerseyClient, additionalHeaders);
@@ -303,11 +306,11 @@ public class JerseyEurekaHttpClientFactory implements TransportClientFactory {
             discoveryApacheClient.addFilter(new GZIPContentEncodingFilter(false));  // 默认关闭了GZIP
 
             // always enable client identity headers
-            String ip = myInstanceInfo == null ? null : myInstanceInfo.getIPAddr();
-            AbstractEurekaIdentity identity = clientIdentity == null ? new EurekaClientIdentity(ip) : clientIdentity;
-            discoveryApacheClient.addFilter(new EurekaIdentityHeaderFilter(identity));
+            String ip = myInstanceInfo == null ? null : myInstanceInfo.getIPAddr();  // 本地ip
+            AbstractEurekaIdentity identity = clientIdentity == null ? new EurekaClientIdentity(ip) : clientIdentity;  // 不为空，前面已经初始化了 new EurekaClientIdentity(myInstanceInfo.getIPAddr()),
+            discoveryApacheClient.addFilter(new EurekaIdentityHeaderFilter(identity));// 在过滤器链上添加一个过滤器。
 
-            if (additionalFilters != null) {
+            if (additionalFilters != null) { // 空的，留着拓展用的
                 for (ClientFilter filter : additionalFilters) {
                     if (filter != null) {
                         discoveryApacheClient.addFilter(filter);

@@ -184,14 +184,14 @@ public class DiscoveryClient implements EurekaClient {
     private InstanceInfoReplicator instanceInfoReplicator;
 
     private volatile int registrySize = 0;
-    private volatile long lastSuccessfulRegistryFetchTimestamp = -1;
+    private volatile long lastSuccessfulRegistryFetchTimestamp = -1;  // 这个实在拉取注册表的定时任务中初始化，每拉取成功一次，就去更新为当前时间
     private volatile long lastSuccessfulHeartbeatTimestamp = -1;  // 最后更新成功时间
     private final ThresholdLevelsMetric heartbeatStalenessMonitor;
     private final ThresholdLevelsMetric registryStalenessMonitor;
 
     private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
-    protected final EurekaClientConfig clientConfig;
+    protected final EurekaClientConfig clientConfig;  // 在Spring cloud Netflix中是EurekaClientConfigBean
     protected final EurekaTransportConfig transportConfig;
 
     private final long initTimestampMs;
@@ -201,7 +201,7 @@ public class DiscoveryClient implements EurekaClient {
 
     private static final class EurekaTransport {
         private ClosableResolver bootstrapResolver;
-        private TransportClientFactory transportClientFactory;
+        private TransportClientFactory transportClientFactory;  //  JerseyEurekaHttpClientFactory
 
         private EurekaHttpClient registrationClient;  // SessionedEurekaHttpClient --> RetryableEurekaHttpClient
         private EurekaHttpClientFactory registrationClientFactory;  // registrationClientFactory --调用--> canonicalClientFactory
@@ -540,23 +540,24 @@ public class DiscoveryClient implements EurekaClient {
                 ? Optional.empty()
                 : args.getHostnameVerifier();
 
-        // If the transport factory was not supplied with args, assume they are using jersey 1 for passivity
+        // If the transport factory was not supplied with args, assume they are using jersey 1 for passivity  如果传输工厂没有提供args，则假定他们使用jersey1来表示被动性。
         //
         eurekaTransport.transportClientFactory = providedJerseyClient == null
                 ? transportClientFactories.newTransportClientFactory(clientConfig, additionalFilters, applicationInfoManager.getInfo(), sslContext, hostnameVerifier)  // Jersey1TransportClientFactories.newTransportClientFactory
                 : transportClientFactories.newTransportClientFactory(additionalFilters, providedJerseyClient);
 
+        // 暂时不知道在那能用到
         ApplicationsResolver.ApplicationsSource applicationsSource = new ApplicationsResolver.ApplicationsSource() {
             @Override
             public Applications getApplications(int stalenessThreshold, TimeUnit timeUnit) {
-                long thresholdInMs = TimeUnit.MILLISECONDS.convert(stalenessThreshold, timeUnit);
-                long delay = getLastSuccessfulRegistryFetchTimePeriod();
-                if (delay > thresholdInMs) {
+                long thresholdInMs = TimeUnit.MILLISECONDS.convert(stalenessThreshold, timeUnit); // 转换成毫秒
+                long delay = getLastSuccessfulRegistryFetchTimePeriod(); // 返回当前时间与最后一次成功拉取注册表时间的差值  毫秒
+                if (delay > thresholdInMs) { // 大于返回空？
                     logger.info("Local registry is too stale for local lookup. Threshold:{}, actual:{}",
                             thresholdInMs, delay);
                     return null;
                 } else {
-                    return localRegionApps.get();
+                    return localRegionApps.get();  // 拿取注册表
                 }
             }
         };
@@ -1789,6 +1790,10 @@ public class DiscoveryClient implements EurekaClient {
                 : System.currentTimeMillis() - lastSuccessfulHeartbeatTimestamp;
     }
 
+    /**
+     * 返回当前时间与最后一次成功拉取注册表时间的差值
+     * @return
+     */
     public long getLastSuccessfulRegistryFetchTimePeriod() {
         return lastSuccessfulRegistryFetchTimestamp < 0
                 ? lastSuccessfulRegistryFetchTimestamp

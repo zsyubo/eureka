@@ -1387,6 +1387,8 @@ public class InstanceInfo {
     }
 
     /**
+     * 获取一个特定实例所在的区域。注意，对于AWS部署，myInfo应该包含AWS dataCenterInfo，它应该包含实例的AWS区域，而availZones被忽略。
+     *
      * Get the zone that a particular instance is in.
      * Note that for AWS deployments, myInfo should contain AWS dataCenterInfo which should contain
      * the AWS zone of the instance, and availZones is ignored.

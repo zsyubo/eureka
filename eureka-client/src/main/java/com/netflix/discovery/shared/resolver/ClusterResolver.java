@@ -19,6 +19,7 @@ package com.netflix.discovery.shared.resolver;
 import java.util.List;
 
 /**
+ * spring cloud Netflix中是ZoneAffinityClusterResolver
  * @author Tomasz Bak
  */
 public interface ClusterResolver<T extends EurekaEndpoint> {

@@ -34,7 +34,7 @@ public class ConfigClusterResolver implements ClusterResolver<AwsEndpoint> {
 
     @Override
     public List<AwsEndpoint> getClusterEndpoints() {
-        if (clientConfig.shouldUseDnsForFetchingServiceUrls()) {
+        if (clientConfig.shouldUseDnsForFetchingServiceUrls()) {  // 是否通过dns来获取server url
             if (logger.isInfoEnabled()) {
                 logger.info("Resolving eureka endpoints via DNS: {}", getDNSName());
             }
@@ -69,17 +69,19 @@ public class ConfigClusterResolver implements ClusterResolver<AwsEndpoint> {
     }
 
     private List<AwsEndpoint> getClusterEndpointsFromConfig() {
-        String[] availZones = clientConfig.getAvailabilityZones(clientConfig.getRegion());
-        String myZone = InstanceInfo.getZone(availZones, myInstanceInfo);
+        String[] availZones = clientConfig.getAvailabilityZones(clientConfig.getRegion()); // 没使用region就是默认的(defaultZone)
+        String myZone = InstanceInfo.getZone(availZones, myInstanceInfo); // defaultZone
 
+        // key zone名字，默认为defaultZone，， vlaue是相应的server url list
         Map<String, List<String>> serviceUrls = EndpointUtils
                 .getServiceUrlsMapFromConfig(clientConfig, myZone, clientConfig.shouldPreferSameZoneEureka());
 
+        // 组装成AwsEndpoint
         List<AwsEndpoint> endpoints = new ArrayList<>();
         for (String zone : serviceUrls.keySet()) {
             for (String url : serviceUrls.get(zone)) {
                 try {
-                    endpoints.add(new AwsEndpoint(url, getRegion(), zone));
+                    endpoints.add(new AwsEndpoint(url, getRegion() /*us-east-1*/, zone));
                 } catch (Exception ignore) {
                     logger.warn("Invalid eureka server URI: {}; removing from the server pool", url);
                 }

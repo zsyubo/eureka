@@ -110,9 +110,9 @@ public final class EurekaHttpClients {
             final InstanceInfo myInstanceInfo,
             final ApplicationsResolver.ApplicationsSource applicationsSource,
             final EndpointRandomizer randomizer) {
-        if (COMPOSITE_BOOTSTRAP_STRATEGY.equals(transportConfig.getBootstrapResolverStrategy())) {
-            if (clientConfig.shouldFetchRegistry()) {
-                return compositeBootstrapResolver(
+        if (COMPOSITE_BOOTSTRAP_STRATEGY.equals(transportConfig.getBootstrapResolverStrategy())) {  // 不会进
+            if (clientConfig.shouldFetchRegistry()) {  // 表示该客户端是否应从eureka服务器获取eureka注册表信息。
+                return compositeBootstrapResolver(  //
                         clientConfig,
                         transportConfig,
                         transportClientFactory,
@@ -131,14 +131,16 @@ public final class EurekaHttpClients {
     }
 
     /**
+     * 一个自举解析器，根据DNS或静态配置解析eureka服务器端点，这取决于对其中之一的配置。这个解析器将在开始时进行预热。
+     *
      * @return a bootstrap resolver that resolves eureka server endpoints based on either DNS or static config,
      *         depending on configuration for one or the other. This resolver will warm up at the start.
      */
-    static ClosableResolver<AwsEndpoint> defaultBootstrapResolver(final EurekaClientConfig clientConfig,
+    static ClosableResolver<AwsEndpoint> defaultBootstrapResolver(final EurekaClientConfig clientConfig,  //在spring cloud中是EurekaClientConfigBean
                                                                   final InstanceInfo myInstanceInfo,
                                                                   final EndpointRandomizer randomizer) {
-        String[] availZones = clientConfig.getAvailabilityZones(clientConfig.getRegion());
-        String myZone = InstanceInfo.getZone(availZones, myInstanceInfo);
+        String[] availZones = clientConfig.getAvailabilityZones(clientConfig.getRegion());  // 默认defaultZone
+        String myZone = InstanceInfo.getZone(availZones, myInstanceInfo); // defaultZone
 
         ClusterResolver<AwsEndpoint> delegateResolver = new ZoneAffinityClusterResolver(
                 new ConfigClusterResolver(clientConfig, myInstanceInfo),
@@ -147,11 +149,12 @@ public final class EurekaHttpClients {
                 randomizer
         );
 
-        List<AwsEndpoint> initialValue = delegateResolver.getClusterEndpoints();
+        List<AwsEndpoint> initialValue = delegateResolver.getClusterEndpoints(); // 这里面的是配置文件中  集群eureka server地址
         if (initialValue.isEmpty()) {
+            // Eureka服务器端点的初始解析失败。检查ConfigClusterResolver日志以了解更多信息
             String msg = "Initial resolution of Eureka server endpoints failed. Check ConfigClusterResolver logs for more info";
             logger.error(msg);
-            failFastOnInitCheck(clientConfig, msg);
+            failFastOnInitCheck(clientConfig, msg); // 如果是eureka client则抛出异常
         }
 
         return new AsyncResolver<>(
@@ -164,6 +167,7 @@ public final class EurekaHttpClients {
     }
 
     /**
+     * 一个引导解析器，通过远程调用本地注册表的 "vip源 "来解析eureka服务器端点，其中源是由rootResolver（dns或config）找到的。
      * @return a bootstrap resolver that resolves eureka server endpoints via a remote call to a "vip source"
      *         the local registry, where the source is found from a rootResolver (dns or config)
      */

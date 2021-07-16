@@ -26,6 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 它是一个重新排列服务器列表的集群解析器，使列表中的第一个服务器与客户处于同一区域。该服务器是从该区的可用服务器池中随机选择的。其余的服务器以随机顺序添加，首先是本地区，然后是其他区的服务器
+ *
  * It is a cluster resolver that reorders the server list, such that the first server on the list
  * is in the same zone as the client. The server is chosen randomly from the available pool of server in
  * that zone. The remaining servers are appended in a random order, local zone first, followed by servers from other zones.
@@ -36,9 +38,9 @@ public class ZoneAffinityClusterResolver implements ClusterResolver<AwsEndpoint>
 
     private static final Logger logger = LoggerFactory.getLogger(ZoneAffinityClusterResolver.class);
 
-    private final ClusterResolver<AwsEndpoint> delegate;
+    private final ClusterResolver<AwsEndpoint> delegate;  // ConfigClusterResolver
     private final String myZone;
-    private final boolean zoneAffinity;
+    private final boolean zoneAffinity; // 区域亲和力
     private final EndpointRandomizer randomizer;
 
     /**
@@ -50,7 +52,7 @@ public class ZoneAffinityClusterResolver implements ClusterResolver<AwsEndpoint>
             boolean zoneAffinity,
             EndpointRandomizer randomizer
     ) {
-        this.delegate = delegate;
+        this.delegate = delegate;  // ConfigClusterResolver
         this.myZone = myZone;
         this.zoneAffinity = zoneAffinity;
         this.randomizer = randomizer;

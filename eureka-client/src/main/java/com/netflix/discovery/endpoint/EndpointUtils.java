@@ -222,6 +222,8 @@ public class EndpointUtils {
     }
 
     /**
+     * 从属性文件中获取所有eureka服务的URL列表，以便eureka客户端与之对话。
+     *
      * Get the list of all eureka service urls from properties file for the eureka client to talk to.
      *
      * @param clientConfig the clientConfig to use

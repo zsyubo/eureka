@@ -6,6 +6,11 @@ import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.filter.ClientFilter;
 
+/**
+ * 从代码中看 猜测就是在 http 头加入一些 通用信息
+ * @author 远山(胡元富)
+ * @date  2021/7/16
+ **/
 public class EurekaIdentityHeaderFilter extends ClientFilter {
 
     private final AbstractEurekaIdentity authInfo;

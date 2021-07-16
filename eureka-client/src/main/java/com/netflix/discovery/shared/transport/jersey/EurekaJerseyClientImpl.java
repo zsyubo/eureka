@@ -31,6 +31,7 @@ import org.apache.http.params.HttpParams;
 import static com.netflix.discovery.util.DiscoveryBuildInfo.buildVersion;
 
 /**
+ * 其实就是封装了一层 ApacheHttpClient4，，，
  * @author Tomasz Bak
  */
 public class EurekaJerseyClientImpl implements EurekaJerseyClient {
@@ -54,7 +55,7 @@ public class EurekaJerseyClientImpl implements EurekaJerseyClient {
 
             HttpConnectionParams.setConnectionTimeout(params, connectionTimeout);
             HttpConnectionParams.setSoTimeout(params, readTimeout);
-
+            //  清理http连接池
             this.apacheHttpClientConnectionCleaner = new ApacheHttpClientConnectionCleaner(apacheHttpClient, connectionIdleTimeout);
         } catch (Throwable e) {
             throw new RuntimeException("Cannot create Jersey client", e);

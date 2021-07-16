@@ -24,6 +24,11 @@ import com.google.inject.ImplementedBy;
 import com.netflix.discovery.shared.transport.EurekaTransportConfig;
 
 /**
+ * eureka客户端向Eureka服务器注册一个实例所需的配置信息。
+ * 大部分所需信息由默认配置DefaultEurekaClientConfig提供。用户只需要提供Eureka服务器服务的URL。Eureka服务器服务的URL可以通过2种机制进行配置 1）通过在DNS中注册信息。2）通过在配置中指定它。
+ * 一旦客户端被注册，用户就可以根据虚拟主机名（也叫VIPAddress）从EurekaClient中查找信息，这是最常见的方式，或者通过其他方式来获得与其他在Eureka注册的实例对话所需的信息。
+ * 请注意，所有的配置在运行时都是无效的，除非和另外指定。
+ *
  * Configuration information required by the eureka clients to register an
  * instance with <em>Eureka</em> server.
  *
@@ -84,6 +89,8 @@ public interface EurekaClientConfig {
     int getInitialInstanceInfoReplicationIntervalSeconds();
 
     /**
+     * 表示多长时间轮询一次eureka服务器信息的变化（以秒为单位）。Eureka服务器可以被添加或删除，这个设置控制了eureka客户端应该多快知道这个信息。
+     *
      * Indicates how often(in seconds) to poll for changes to eureka server
      * information.
      *
@@ -256,6 +263,10 @@ public interface EurekaClientConfig {
     String getEurekaServerDNSName();
 
     /**
+     * 指示eureka客户端是否应使用DNS机制来获取要交谈的eureka服务器的列表。当DNS名称被更新为有额外的服务器时，在eureka客户端按照getEurekaServiceUrlPollIntervalSeconds()中的规定对该信息进行轮询后，立即使用该信息。
+     * 另外，服务Url可以返回getEurekaServerServiceUrls(String)，但用户应该实现自己的机制，在发生变化时返回更新的列表。
+     * 这些变化在运行时是有效的。
+     *
      * Indicates whether the eureka client should use the DNS mechanism to fetch
      * a list of eureka servers to talk to. When the DNS name is updated to have
      * additional servers, that information is used immediately after the eureka
@@ -397,12 +408,14 @@ public interface EurekaClientConfig {
 
     /**
      * Gets the region (used in AWS datacenters) where this instance resides.
-     *
+     * us-east-1
      * @return AWS region where this instance resides.
      */
     String getRegion();
 
     /**
+     * 获取该实例所在区域的可用性区域（用于AWS数据中心）的列表。这些变化在运行时在getRegistryFetchIntervalSeconds()指定的下一个注册表获取周期生效。
+     *
      * Gets the list of availability zones (used in AWS data centers) for the
      * region in which this instance resides.
      *

@@ -65,6 +65,11 @@ public interface EurekaTransportConfig {
     String getReadClusterVip();
 
     /**
+     * 实际Debug发现为空
+     * 可以用来指定不同的引导解决策略。目前支持的策略是。
+     * - default 默认（如果没有匹配）：从dns txt记录或静态配置主机名引导
+     * - composite 复合：如果数据可用且warm(见getApplicationsResolverDataStalenessThresholdSeconds())，从本地注册表引导，否则返回到后备默认值
+     *
      * Can be used to specify different bootstrap resolve strategies. Current supported strategies are:
      *  - default (if no match): bootstrap from dns txt records or static config hostnames
      *  - composite: bootstrap from local registry if data is available

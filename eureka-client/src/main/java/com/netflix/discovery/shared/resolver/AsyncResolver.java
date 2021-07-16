@@ -68,6 +68,8 @@ public class AsyncResolver<T extends EurekaEndpoint> implements ClosableResolver
     }
 
     /**
+     * 创建一个具有预设初始值的异步解析器。当这个解析器第一次被调用时，将不会有预热，初始值将被返回。定期更新任务将在第一次调用getClusterEndpoints后才会被安排。
+     *
      * Create an async resolver with a preset initial value. WHen this resolver is called for the first time,
      * there will be no warm up and the initial value will be returned. The periodic update task will not be
      * scheduled until after the first time getClusterEndpoints call.
@@ -90,6 +92,7 @@ public class AsyncResolver<T extends EurekaEndpoint> implements ClosableResolver
     }
 
     /**
+     * 这里面有好几个task
      * @param delegate the delegate resolver to async resolve from
      * @param initialValue the initial value to use
      * @param executorThreadPoolSize the max number of threads for the threadpool

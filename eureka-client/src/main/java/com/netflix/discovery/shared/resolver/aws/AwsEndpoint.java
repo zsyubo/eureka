@@ -16,7 +16,7 @@ public class AwsEndpoint extends DefaultEndpoint {
 
     public AwsEndpoint(String serviceURI, String region, String zone) {
         super(serviceURI);
-        this.region = region;
+        this.region = region; // us-east-1
         this.zone = zone;
     }
 

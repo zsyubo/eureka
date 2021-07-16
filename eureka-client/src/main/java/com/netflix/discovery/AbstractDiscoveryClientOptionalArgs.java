@@ -28,6 +28,10 @@ public abstract class AbstractDiscoveryClientOptionalArgs<T> {
 
     PreRegistrationHandler preRegistrationHandler;
 
+    /**
+     * ApacheHttpClient4 的过滤器，可以做一些自定义的操作
+     * com.netflix.discovery.shared.transport.jersey.JerseyEurekaHttpClientFactory.JerseyEurekaHttpClientFactoryBuilder#addFilters(com.sun.jersey.client.apache4.ApacheHttpClient4)
+     */
     Collection<T> additionalFilters;
 
     EurekaJerseyClient eurekaJerseyClient;
