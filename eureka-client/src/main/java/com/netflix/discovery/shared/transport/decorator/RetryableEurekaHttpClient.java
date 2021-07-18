@@ -40,6 +40,14 @@ import org.slf4j.LoggerFactory;
 import static com.netflix.discovery.EurekaClientNames.METRIC_TRANSPORT_PREFIX;
 
 /**
+ * RetryableEurekaHttpClient在集群的后续服务器上重试失败的请求。它还维护着简单的隔离列表，所以操作不会在那些目前无法到达的服务器上再次重试。
+ *
+ * 隔离
+ * 所有通信失败的服务器都被放在隔离列表中。第一次成功的执行会清除这个列表，这使得这些服务器有资格为未来的请求服务。一旦所有可用的服务器都用完了，该列表也会被清除。
+ * 5xx
+ * 如果返回5xx状态代码，ServerStatusEvaluator谓词会评估是否应该在另一个服务器上重试，或者将带有该状态代码的响应返回给客户端。
+ *
+ *
  * {@link RetryableEurekaHttpClient} retries failed requests on subsequent servers in the cluster.
  * It maintains also simple quarantine list, so operations are not retried again on servers
  * that are not reachable at the moment.
@@ -62,12 +70,12 @@ public class RetryableEurekaHttpClient extends EurekaHttpClientDecorator {
 
     private final String name;
     private final EurekaTransportConfig transportConfig;
-    private final ClusterResolver clusterResolver;
-    private final TransportClientFactory clientFactory;
+    private final ClusterResolver clusterResolver;  // AsyncResolver
+    private final TransportClientFactory clientFactory; // JerseyEurekaHttpClientFactory
     private final ServerStatusEvaluator serverStatusEvaluator;
-    private final int numberOfRetries;
+    private final int numberOfRetries; // 默认是3次
 
-    private final AtomicReference<EurekaHttpClient> delegate = new AtomicReference<>();
+    private final AtomicReference<EurekaHttpClient> delegate = new AtomicReference<>();  // JerseyApplicationClient
 
     private final Set<EurekaEndpoint> quarantineSet = new ConcurrentSkipListSet<>();
 
@@ -98,26 +106,29 @@ public class RetryableEurekaHttpClient extends EurekaHttpClientDecorator {
     protected <R> EurekaHttpResponse<R> execute(RequestExecutor<R> requestExecutor) {
         List<EurekaEndpoint> candidateHosts = null;
         int endpointIdx = 0;
-        for (int retry = 0; retry < numberOfRetries; retry++) {
-            EurekaHttpClient currentHttpClient = delegate.get();
+        for (int retry = 0; retry < numberOfRetries; retry++) { // 重试3次
+            EurekaHttpClient currentHttpClient = delegate.get();  //JerseyApplicationClient
             EurekaEndpoint currentEndpoint = null;
-            if (currentHttpClient == null) {
+            if (currentHttpClient == null) { // 第一次会进来
                 if (candidateHosts == null) {
                     candidateHosts = getHostCandidates();
                     if (candidateHosts.isEmpty()) {
+                        // 走到这 空就不正常
                         throw new TransportException("There is no known eureka server; cluster server list is empty");
                     }
                 }
-                if (endpointIdx >= candidateHosts.size()) {
+                if (endpointIdx >= candidateHosts.size()) {  // 重试是去请求不同的服务。如果没有不同的服务，那就直接失败
                     throw new TransportException("Cannot execute request on any known server");
                 }
 
                 currentEndpoint = candidateHosts.get(endpointIdx++);
+                // com.netflix.discovery.shared.transport.jersey.JerseyEurekaHttpClientFactory.newClient
                 currentHttpClient = clientFactory.newClient(currentEndpoint);
             }
 
             try {
-                EurekaHttpResponse<R> response = requestExecutor.execute(currentHttpClient);
+                // JerseyApplicationClient#getApplications
+                EurekaHttpResponse<R> response = requestExecutor.execute(currentHttpClient); // com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.getApplications
                 if (serverStatusEvaluator.accept(response.getStatusCode(), requestExecutor.getRequestType())) {
                     delegate.set(currentHttpClient);
                     if (retry > 0) {
@@ -159,21 +170,24 @@ public class RetryableEurekaHttpClient extends EurekaHttpClientDecorator {
     }
 
     private List<EurekaEndpoint> getHostCandidates() {
-        List<EurekaEndpoint> candidateHosts = clusterResolver.getClusterEndpoints();
-        quarantineSet.retainAll(candidateHosts);
+        List<EurekaEndpoint> candidateHosts = clusterResolver.getClusterEndpoints(); // 获取eureka server列表
+        quarantineSet.retainAll(candidateHosts); // 就是从set中清除candidateHosts没有的数据
 
-        // If enough hosts are bad, we have no choice but start over again
+        //
+        // If enough hosts are bad, we have no choice but start over again  如果有足够多的主机是坏的，我们没有选择，只能重新开始
         int threshold = (int) (candidateHosts.size() * transportConfig.getRetryableClientQuarantineRefreshPercentage());
         //Prevent threshold is too large
+        // 不可能出现这种情况吧
         if (threshold > candidateHosts.size()) {
             threshold = candidateHosts.size();
         }
         if (quarantineSet.isEmpty()) {
-            // no-op
-        } else if (quarantineSet.size() >= threshold) {
+            // no-op  空就撒事不做呗
+        } else if (quarantineSet.size() >= threshold) {  // 也就是list和set的数据是同步的
             logger.debug("Clearing quarantined list of size {}", quarantineSet.size());
             quarantineSet.clear();
         } else {
+            // 没有就新加
             List<EurekaEndpoint> remainingHosts = new ArrayList<>(candidateHosts.size());
             for (EurekaEndpoint endpoint : candidateHosts) {
                 if (!quarantineSet.contains(endpoint)) {

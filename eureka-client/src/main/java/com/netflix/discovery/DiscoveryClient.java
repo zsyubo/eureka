@@ -200,7 +200,7 @@ public class DiscoveryClient implements EurekaClient {
     private final Stats stats = new Stats();
 
     private static final class EurekaTransport {
-        private ClosableResolver bootstrapResolver;
+        private ClosableResolver bootstrapResolver;  //  AsyncResolver 里面定义了几个task，，，没看懂
         private TransportClientFactory transportClientFactory;  //  JerseyEurekaHttpClientFactory
 
         private EurekaHttpClient registrationClient;  // SessionedEurekaHttpClient --> RetryableEurekaHttpClient

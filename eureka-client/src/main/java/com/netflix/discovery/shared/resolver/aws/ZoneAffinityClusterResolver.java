@@ -40,10 +40,11 @@ public class ZoneAffinityClusterResolver implements ClusterResolver<AwsEndpoint>
 
     private final ClusterResolver<AwsEndpoint> delegate;  // ConfigClusterResolver
     private final String myZone;
-    private final boolean zoneAffinity; // 区域亲和力
-    private final EndpointRandomizer randomizer;
+    private final boolean zoneAffinity; // 区域亲和力 基本为true
+    private final EndpointRandomizer randomizer; // 默认 com.netflix.discovery.shared.resolver.ResolverUtils.randomize
 
     /**
+     * 一个zoneAffinity定义了区域亲和（真）或反亲和规则（假）。
      * A zoneAffinity defines zone affinity (true) or anti-affinity rules (false).
      */
     public ZoneAffinityClusterResolver(
@@ -68,9 +69,12 @@ public class ZoneAffinityClusterResolver implements ClusterResolver<AwsEndpoint>
         List<AwsEndpoint>[] parts = ResolverUtils.splitByZone(delegate.getClusterEndpoints(), myZone);
         List<AwsEndpoint> myZoneEndpoints = parts[0];
         List<AwsEndpoint> remainingEndpoints = parts[1];
+        // 随机化和合并
         List<AwsEndpoint> randomizedList = randomizeAndMerge(myZoneEndpoints, remainingEndpoints);
+
         if (!zoneAffinity) {
-            Collections.reverse(randomizedList);
+            // 这地方主要是判断是不是优先选择同一区域，如果不是反转数组？？
+            Collections.reverse(randomizedList);// 颠倒指定列表中元素的顺序。  该方法以线性时间运行。
         }
 
         logger.debug("Local zone={}; resolved to: {}", myZone, randomizedList);
@@ -78,6 +82,12 @@ public class ZoneAffinityClusterResolver implements ClusterResolver<AwsEndpoint>
         return randomizedList;
     }
 
+    /**
+     * 随机化和合并
+     * @param myZoneEndpoints
+     * @param remainingEndpoints
+     * @return
+     */
     private List<AwsEndpoint> randomizeAndMerge(List<AwsEndpoint> myZoneEndpoints, List<AwsEndpoint> remainingEndpoints) {
         if (myZoneEndpoints.isEmpty()) {
             return randomizer.randomize(remainingEndpoints);

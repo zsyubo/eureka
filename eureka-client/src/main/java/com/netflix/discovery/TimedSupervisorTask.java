@@ -50,7 +50,7 @@ public class TimedSupervisorTask extends TimerTask {
         this.timeoutMillis = timeUnit.toMillis(timeout);
         this.task = task;
         this.delay = new AtomicLong(timeoutMillis);
-        this.maxDelay = timeoutMillis * expBackOffBound;
+        this.maxDelay = timeoutMillis * expBackOffBound; // 最大延迟时间
 
         // Initialize the counters and register.
         successCounter = Monitors.newCounter("success");

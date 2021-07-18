@@ -17,6 +17,8 @@ public interface EurekaTransportConfig {
     int getSessionedClientReconnectIntervalSeconds();
 
     /**
+     * 在[0, 1.0]的范围内，超过该隔离集被清除的全部端点集的百分比。 0.66
+     *
      * @return the percentage of the full endpoints set above which the quarantine set is cleared in the range [0, 1.0]
      */
     double getRetryableClientQuarantineRefreshPercentage();
@@ -35,6 +37,8 @@ public interface EurekaTransportConfig {
     boolean applicationsResolverUseIp();
 
     /**
+     * 轮询异步解析器的时间间隔。  默认5分钟
+     *
      * @return the interval to poll for the async resolver.
      */
     int getAsyncResolverRefreshIntervalMs();

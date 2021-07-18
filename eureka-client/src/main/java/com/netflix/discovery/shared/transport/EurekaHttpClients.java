@@ -149,7 +149,7 @@ public final class EurekaHttpClients {
                 randomizer
         );
 
-        List<AwsEndpoint> initialValue = delegateResolver.getClusterEndpoints(); // 这里面的是配置文件中  集群eureka server地址
+        List<AwsEndpoint> initialValue = delegateResolver.getClusterEndpoints(); // 这里面的是配置文件中  集群eureka server地址，，这里面的数据是打散了的
         if (initialValue.isEmpty()) {
             // Eureka服务器端点的初始解析失败。检查ConfigClusterResolver日志以了解更多信息
             String msg = "Initial resolution of Eureka server endpoints failed. Check ConfigClusterResolver logs for more info";

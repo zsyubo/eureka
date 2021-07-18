@@ -81,6 +81,10 @@ public final class ResolverUtils {
     }
 
     /**
+     *
+     * 使用本地IPv4地址哈希值作为种子，随机化服务器列表。
+     * 更具本机ipv4座位hash code
+     *
      * Randomize server list using local IPv4 address hash as a seed.
      *
      * @return a copy of the original list with elements in the random order

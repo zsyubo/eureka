@@ -22,6 +22,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import static com.netflix.discovery.EurekaClientNames.METRIC_RESOLVER_PREFIX;
 
 /**
+ * 一个异步解析器，它为获取保持一个缓存版本的端点列表值，并在不同的线程中定期更新这个缓存。
+ *
  * An async resolver that keeps a cached version of the endpoint list value for gets, and updates this cache
  * periodically in a different thread.
  *
@@ -42,7 +44,7 @@ public class AsyncResolver<T extends EurekaEndpoint> implements ClosableResolver
     private final TimedSupervisorTask backgroundTask;
     private final AtomicReference<List<T>> resultsRef;
 
-    private final int refreshIntervalMs;
+    private final int refreshIntervalMs; // 默认5分钟
     private final int warmUpTimeoutMs;
 
     // Metric timestamp, tracking last time when data were effectively changed.
@@ -74,10 +76,10 @@ public class AsyncResolver<T extends EurekaEndpoint> implements ClosableResolver
      * there will be no warm up and the initial value will be returned. The periodic update task will not be
      * scheduled until after the first time getClusterEndpoints call.
      */
-    public AsyncResolver(String name,
-                         ClusterResolver<T> delegate,
-                         List<T> initialValues,
-                         int executorThreadPoolSize,
+    public AsyncResolver(String name,// bootstrap
+                         ClusterResolver<T> delegate, // ZoneAffinityClusterResolver
+                         List<T> initialValues, //  集群eureka server地址
+                         int executorThreadPoolSize, // 1
                          int refreshIntervalMs) {
         this(
                 name,
@@ -125,6 +127,7 @@ public class AsyncResolver<T extends EurekaEndpoint> implements ClosableResolver
                         .build()
         );
 
+        // 后台线程
         this.backgroundTask = new TimedSupervisorTask(
                 this.getClass().getSimpleName(),
                 executorService,
@@ -158,13 +161,14 @@ public class AsyncResolver<T extends EurekaEndpoint> implements ClosableResolver
     @Override
     public List<T> getClusterEndpoints() {
         long delay = refreshIntervalMs;
+        // warmedUp 在构造方法实例化时就设置为true了
         if (warmedUp.compareAndSet(false, true)) {
             if (!doWarmUp()) {
                 delay = 0;
             }
         }
         if (scheduled.compareAndSet(false, true)) {
-            scheduleTask(delay);
+            scheduleTask(delay); // 属实疑惑，不知道为撒这样写
         }
         return resultsRef.get();
     }
@@ -203,10 +207,14 @@ public class AsyncResolver<T extends EurekaEndpoint> implements ClosableResolver
         return resultsRef.get().size();  // return directly from the ref and not the method so as to not trigger warming
     }
 
+    /**
+     * 一次性task？
+     */
     private final Runnable updateTask = new Runnable() {
         @Override
         public void run() {
             try {
+                // 获取eureka server列表
                 List<T> newList = delegate.getClusterEndpoints();
                 if (newList != null) {
                     resultsRef.getAndSet(newList);
