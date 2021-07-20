@@ -61,8 +61,8 @@ public class JerseyEurekaHttpClientFactory implements TransportClientFactory {
 
     public static final String HTTP_X_DISCOVERY_ALLOW_REDIRECT = "X-Discovery-AllowRedirect";
 
-    private final EurekaJerseyClient jerseyClient;
-    private final ApacheHttpClient4 apacheClient;
+    private final EurekaJerseyClient jerseyClient;  // EurekaJerseyClientImpl
+    private final ApacheHttpClient4 apacheClient;  // ApacheHttpClient4
     private final ApacheHttpClientConnectionCleaner cleaner;
     private final Map<String, String> additionalHeaders;
 
@@ -81,6 +81,7 @@ public class JerseyEurekaHttpClientFactory implements TransportClientFactory {
 
     @Deprecated
     public JerseyEurekaHttpClientFactory(EurekaJerseyClient jerseyClient, Map<String, String> additionalHeaders) {
+        // 这地方进的
         this(jerseyClient, null, -1, additionalHeaders);
     }
 
@@ -92,7 +93,7 @@ public class JerseyEurekaHttpClientFactory implements TransportClientFactory {
                                           ApacheHttpClient4 apacheClient,
                                           long connectionIdleTimeout, // -1
                                           Map<String, String> additionalHeaders) {
-        this.jerseyClient = jerseyClient;
+        this.jerseyClient = jerseyClient;  // EurekaJerseyClientImpl
         this.apacheClient = jerseyClient != null ? jerseyClient.getClient() : apacheClient;
         this.additionalHeaders = additionalHeaders;
         if (jerseyClient == null) {

@@ -470,7 +470,7 @@ public class DiscoveryClient implements EurekaClient {
             this.preRegistrationHandler.beforeRegistration();
         }
 
-        //      允许注册到eureka server &&   是否强制注册(默认false)
+        //  允许注册到eureka server &&   是否强制注册(默认false)
         if (clientConfig.shouldRegisterWithEureka() && clientConfig.shouldEnforceRegistrationAtInit()) {
             try {
                 if (!register() ) {

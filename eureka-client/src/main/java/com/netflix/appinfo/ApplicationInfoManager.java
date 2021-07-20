@@ -196,6 +196,8 @@ public class ApplicationInfoManager {
     }
 
     /**
+     * 重新获取主机名以检查它是否已经改变。如果有，整个DataCenterInfo被重新获取并在下次心跳时传递给eureka服务器。
+     *
      * Refetches the hostname to check if it has changed. If it has, the entire
      * <code>DataCenterInfo</code> is refetched and passed on to the eureka
      * server on next heartbeat.

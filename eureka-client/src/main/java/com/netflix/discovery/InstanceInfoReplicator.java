@@ -61,8 +61,7 @@ class InstanceInfoReplicator implements Runnable {
         this.rateLimiter = new RateLimiter(TimeUnit.MINUTES);
         this.replicationIntervalSeconds = replicationIntervalSeconds;
         this.burstSize = burstSize;
-
-        this.allowedRatePerMinute = 60 * this.burstSize / this.replicationIntervalSeconds;
+        this.allowedRatePerMinute = 60 * this.burstSize / this.replicationIntervalSeconds; // 默认4  (60*2)/30
         logger.info("InstanceInfoReplicator onDemand update allowed rate per min is {}", allowedRatePerMinute);
     }
 
@@ -91,13 +90,16 @@ class InstanceInfoReplicator implements Runnable {
     }
 
     public boolean onDemandUpdate() {
+        // 限流处理
         if (rateLimiter.acquire(burstSize, allowedRatePerMinute)) {
             if (!scheduler.isShutdown()) {
                 scheduler.submit(new Runnable() {
                     @Override
                     public void run() {
                         logger.debug("Executing on-demand update of local InstanceInfo");
-    
+
+                        // 没有保证保证并发安全，不过做了限流的应该没撒问题
+                        // 如果有正常运行的任务，先取消在运行
                         Future latestPeriodic = scheduledPeriodicRef.get();
                         if (latestPeriodic != null && !latestPeriodic.isDone()) {
                             logger.debug("Canceling the latest scheduled update, it will be rescheduled at the end of on demand update");

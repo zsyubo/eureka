@@ -123,7 +123,7 @@ public class RetryableEurekaHttpClient extends EurekaHttpClientDecorator {
 
                 currentEndpoint = candidateHosts.get(endpointIdx++);
                 // com.netflix.discovery.shared.transport.jersey.JerseyEurekaHttpClientFactory.newClient
-                currentHttpClient = clientFactory.newClient(currentEndpoint);
+                currentHttpClient = clientFactory.newClient(currentEndpoint); // JerseyApplicationClient
             }
 
             try {
