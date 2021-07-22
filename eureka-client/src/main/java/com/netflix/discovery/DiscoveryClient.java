@@ -152,8 +152,8 @@ public class DiscoveryClient implements EurekaClient {
     private final ThreadPoolExecutor heartbeatExecutor;
     private final ThreadPoolExecutor cacheRefreshExecutor;
 
-    private TimedSupervisorTask cacheRefreshTask;
-    private TimedSupervisorTask heartbeatTask;
+    private TimedSupervisorTask cacheRefreshTask;  // 拉取注册表定时任务
+    private TimedSupervisorTask heartbeatTask;   // 续约定时任务
 
     private final Provider<HealthCheckHandler> healthCheckHandlerProvider;
     private final Provider<HealthCheckCallback> healthCheckCallbackProvider;
@@ -704,6 +704,10 @@ public class DiscoveryClient implements EurekaClient {
         }
     }
 
+    /**
+     * 在实例化CloudEurekaClient后调用了一次
+     * @param healthCheckHandler app specific healthcheck handler.
+     */
     @Override
     public void registerHealthCheck(HealthCheckHandler healthCheckHandler) {
         if (instanceInfo == null) {
@@ -712,6 +716,7 @@ public class DiscoveryClient implements EurekaClient {
         if (healthCheckHandler != null) {
             this.healthCheckHandlerRef.set(healthCheckHandler);
             // schedule an onDemand update of the instanceInfo when a new healthcheck handler is registered
+            // 当一个新的健康检查处理程序被注册时，安排一个实例信息的按需更新。
             if (instanceInfoReplicator != null) {
                 instanceInfoReplicator.onDemandUpdate();
             }
@@ -949,6 +954,8 @@ public class DiscoveryClient implements EurekaClient {
     }
 
     /**
+     * 关闭Eureka客户端。同时向eureka服务器发送一个取消注册的请求。
+     *
      * Shuts down Eureka Client. Also sends a deregistration request to the
      * eureka server.
      */
@@ -965,9 +972,10 @@ public class DiscoveryClient implements EurekaClient {
             cancelScheduledTasks();
 
             // If APPINFO was registered
-            if (applicationInfoManager != null
-                    && clientConfig.shouldRegisterWithEureka()
-                    && clientConfig.shouldUnregisterOnShutdown()) {
+            if (applicationInfoManager != null  // 肯定不为空啊，除非还在启动过程中
+                    && clientConfig.shouldRegisterWithEureka()   // 默认为true
+                    && clientConfig.shouldUnregisterOnShutdown()  //默认为true
+            ) {
                 applicationInfoManager.setInstanceStatus(InstanceStatus.DOWN);
                 unregister();
             }

@@ -152,7 +152,11 @@ public interface EurekaClient extends LookupService {
     public void registerHealthCheckCallback(HealthCheckCallback callback);
 
     /**
+     * 在实例化CloudEurekaClient后调用了一次
+     *
      * Register {@link HealthCheckHandler} with the eureka client.
+     *
+     * 向eureka客户端注册HealthCheckHandler。一旦注册，eureka客户端将首先通过调用新注册的健康检查处理程序对注册的实例信息进行按需更新，并随后在EurekaClientConfig指定的时间间隔内调用HealthCheckHandler
      *
      * Once registered, the eureka client will first make an onDemand update of the
      * registering instanceInfo by calling the newly registered healthcheck handler,

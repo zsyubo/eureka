@@ -305,6 +305,8 @@ public interface EurekaClientConfig {
     boolean shouldRegisterWithEureka();
 
     /**
+     * 表示在客户端关闭时，客户端是否应明确地从远程服务器上取消注册。
+     *
      * Indicates whether the client should explicitly unregister itself from the remote server
      * on client shutdown.
      *
