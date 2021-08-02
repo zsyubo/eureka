@@ -15,6 +15,9 @@ public interface ResponseCache {
     AtomicLong getVersionDeltaWithRegions();
 
     /**
+     * 获取关于应用程序的缓存信息。
+     * 如果缓存的信息不可用，它将在第一次请求时生成。在第一次请求之后，<p>该信息再由一个后台线程定期更新。</p>
+     *
      * Get the cached information about applications.
      *
      * <p>
@@ -29,6 +32,8 @@ public interface ResponseCache {
      String get(Key key);
 
     /**
+     * 获得有关应用程序的压缩信息。
+     *
      * Get the compressed information about the applications.
      *
      * @param key the key for which the compressed cached information needs to be obtained.
@@ -37,6 +42,8 @@ public interface ResponseCache {
     byte[] getGZIP(Key key);
 
     /**
+     * 通过停止内部线程和取消注册Servo监控器来执行该缓存的关闭。
+     *
      * Performs a shutdown of this cache by stopping internal threads and unregistering
      * Servo monitors.
      */

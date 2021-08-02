@@ -156,7 +156,8 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
     public void init(PeerEurekaNodes peerEurekaNodes) throws Exception {
         // 5.4.1.1 启动续订租约的频率统计器
         this.numberOfReplicationsLastMin.start();
-        this.peerEurekaNodes = peerEurekaNodes;// 促使化缓存cache？
+        this.peerEurekaNodes = peerEurekaNodes;
+        // 初始化响应缓存
         initializedResponseCache();
         // 5.4.1.2 开启续订租约最低阈值检查的定时任务
         scheduleRenewalThresholdUpdateTask();
@@ -219,7 +220,7 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
     public int syncUp() {
         // Copy entire entry from neighboring DS node
         int count = 0;
-
+        // 默认重试5次
         for (int i = 0; ((i < serverConfig.getRegistrySyncRetries()) && (count == 0)); i++) {
             if (i > 0) {
                 try {
@@ -253,7 +254,9 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
     @Override
     public void openForTraffic(ApplicationInfoManager applicationInfoManager, int count) {
         // Renewals happen every 30 seconds and for a minute it should be a factor of 2.
+        // 更新每30秒发生一次，对于一分钟来说，它应该是2的系数。
         this.expectedNumberOfClientsSendingRenews = count;
+        // 更新自我保护数值
         updateRenewsPerMinThreshold();
         logger.info("Got {} instances from neighboring DS node", count);
         logger.info("Renew threshold is: {}", numberOfRenewsPerMinThreshold);
@@ -263,6 +266,7 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
         }
         DataCenterInfo.Name selfName = applicationInfoManager.getInfo().getDataCenterInfo().getName();
         boolean isAws = Name.Amazon == selfName;
+        // 如果是AWS，特殊处理
         if (isAws && serverConfig.shouldPrimeAwsReplicaConnections()) {
             logger.info("Priming AWS connections for all replicas..");
             primeAwsReplicas(applicationInfoManager);
@@ -558,6 +562,8 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
             synchronized (lock) {
                 // Update threshold only if the threshold is greater than the
                 // current expected threshold or if self preservation is disabled.
+                //   只有当阈值大于当前的预期阈值时才更新阈值。
+                //   的情况下才更新阈值，或者如果自我保护功能被禁用。
                 if ((count) > (serverConfig.getRenewalPercentThreshold()/* 最低续订比例 默认0.85*/ * expectedNumberOfClientsSendingRenews)
                         || (!this.isSelfPreservationModeEnabled()) /* 是否开启保护模式 默认true*/) {
                     // 更新保护模式续租数量

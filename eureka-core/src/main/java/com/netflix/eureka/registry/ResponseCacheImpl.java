@@ -58,6 +58,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 负责缓存将被客户端查询的注册表信息的类。
+ * 缓存以压缩和非压缩的形式对三类请求进行维护--所有应用程序、delta变化和单个应用程序。压缩形式在网络流量方面可能是最有效的，特别是在查询所有应用程序时。
+ * 缓存还为JSON和XML格式以及多个版本保持单独的支付负载。
+ *
  * The class that is responsible for caching registry information that will be
  * queried by the clients.
  *
@@ -129,9 +133,14 @@ public class ResponseCacheImpl implements ResponseCache {
 
         // 缓存更新时间，默认30s
         long responseCacheUpdateIntervalMs = serverConfig.getResponseCacheUpdateIntervalMs();
+        // 写缓存
         this.readWriteCacheMap =
-                CacheBuilder.newBuilder().initialCapacity(serverConfig.getInitialCapacityOfResponseCache())
+                CacheBuilder.newBuilder()
+                        //设置缓存容器的初始容量为10
+                        .initialCapacity(serverConfig.getInitialCapacityOfResponseCache())
+                        //设置写缓存后的过期时间，默认180秒
                         .expireAfterWrite(serverConfig.getResponseCacheAutoExpirationInSeconds(), TimeUnit.SECONDS)
+                        //设置缓存的移除通知
                         .removalListener(new RemovalListener<Key, Value>() {
                             @Override
                             public void onRemoval(RemovalNotification<Key, Value> notification) {
@@ -142,7 +151,9 @@ public class ResponseCacheImpl implements ResponseCache {
                                 }
                             }
                         })
+                        // build方法中可以指定CacheLoader，在缓存不存在时通过CacheLoader的实现自动加载缓存
                         .build(new CacheLoader<Key, Value>() {
+                            // 缓存不存在时，加载缓存的逻辑
                             @Override
                             public Value load(Key key) throws Exception {
                                 if (key.hasRegions()) {
@@ -153,7 +164,6 @@ public class ResponseCacheImpl implements ResponseCache {
                                 return value;
                             }
                         });
-
         if (shouldUseReadOnlyResponseCache) {
             timer.schedule(getCacheUpdateTask(),
                     new Date(((System.currentTimeMillis() / responseCacheUpdateIntervalMs) * responseCacheUpdateIntervalMs)
@@ -414,16 +424,18 @@ public class ResponseCacheImpl implements ResponseCache {
         try {
             String payload;
             switch (key.getEntityType()) {
+                // 普通的
                 case Application:
                     boolean isRemoteRegionRequested = key.hasRegions();
 
                     if (ALL_APPS.equals(key.getName())) {
                         if (isRemoteRegionRequested) {
+                            // 远程分区？
                             tracer = serializeAllAppsWithRemoteRegionTimer.start();
                             payload = getPayLoad(key, registry.getApplicationsFromMultipleRegions(key.getRegions()));
                         } else {
                             tracer = serializeAllAppsTimer.start();
-                            payload = getPayLoad(key, registry.getApplications());
+                            payload = getPayLoad(key, registry.getApplications()); // 直接从注册表中拿
                         }
                     } else if (ALL_APPS_DELTA.equals(key.getName())) {
                         if (isRemoteRegionRequested) {

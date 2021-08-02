@@ -89,7 +89,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     // 最近注册记录
     private final CircularQueue<Pair<Long, String>> recentRegisteredQueue;
     private final CircularQueue<Pair<Long, String>> recentCanceledQueue;
-    // 最近更改队列
+    // 最近更改队列，，，主要是客户端拉取deltas(客户端增量同步)
     private ConcurrentLinkedQueue<RecentlyChangedItem> recentlyChangedQueue = new ConcurrentLinkedQueue<RecentlyChangedItem>();
 
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
@@ -105,7 +105,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
 
     protected String[] allKnownRemoteRegions = EMPTY_STR_ARRAY;
     protected volatile int numberOfRenewsPerMinThreshold;
-    // 在子类InstanceRegistry做的初始化
+    // 在子类InstanceRegistry做的初始化，，，我感觉这个里面存的注册的服务实例数量(总)
     protected volatile int expectedNumberOfClientsSendingRenews;
 
     protected final EurekaServerConfig serverConfig;
@@ -283,6 +283,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
             recentlyChangedQueue.add(new RecentlyChangedItem(lease));
             // 设置实例的更新时间
             registrant.setLastUpdatedTimestamp();
+            // 二级缓存处理
             invalidateCache(registrant.getAppName(), registrant.getVIPAddress(), registrant.getSecureVipAddress());
             logger.info("Registered instance {}/{} with status {} (replication={})",
                     registrant.getAppName(), registrant.getId(), registrant.getStatus(), isReplication);
@@ -354,7 +355,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
 
         synchronized (lock) {
             if (this.expectedNumberOfClientsSendingRenews > 0) {
-                // Since the client wants to cancel it, reduce the number of clients to send renews.
+                // Since the client wants to cancel it, reduce the number of clients to send renews.  既然客户想取消，那就减少客户的数量来发送续费。
                 this.expectedNumberOfClientsSendingRenews = this.expectedNumberOfClientsSendingRenews - 1;
                 updateRenewsPerMinThreshold();
             }
@@ -704,6 +705,8 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     }
 
     /**
+     * 获取该实例注册表中的所有实例，如果Eureka配置允许，则回落到其他区域。
+     *
      * Get all applications in this instance registry, falling back to other regions if allowed in the Eureka config.
      *
      * @return the list of all known applications
@@ -892,6 +895,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     @Deprecated
     public Applications getApplicationDeltas() {
         GET_ALL_CACHE_MISS_DELTA.increment();
+        // 新建一个application
         Applications apps = new Applications();
         apps.setVersion(responseCache.getVersionDelta().get());
         Map<String, Application> applicationInstancesMap = new HashMap<String, Application>();
@@ -942,6 +946,9 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     }
 
     /**
+     * 获取应用程序delta，也包括来自通过的远程区域的实例，以及来自本地区域的实例。如果该应用程序没有出现在EurekaServerConfig.getRemoteRegionAppWhitelist(String)为某一地区指定的白名单中，可以进一步限制选择实例的远程地区。
+     * 如果没有为一个地区定义白名单，该方法也将通过向EurekaServerConfig.getRemoteRegionAppWhitelist(String)方法传递null来寻找一个全球白名单。
+     *
      * Gets the application delta also including instances from the passed remote regions, with the instances from the
      * local region. <br/>
      *

@@ -432,6 +432,10 @@ public interface EurekaClientConfig {
     String[] getAvailabilityZones(String region);
 
     /**
+     * 获取完全合格的java.net.URLs列表，以便与eureka服务器通信。
+     * 通常，eureka服务器的java.net.URLs带有协议、主机、端口、上下文和版本信息（如果有）。Example: http://ec2-256-156-243-129.compute-1.amazonaws.com:7001/eureka/v2/
+     * 这些变化在运行时，在getEurekaServiceUrlPollIntervalSeconds()指定的下一个服务URL刷新周期生效。
+     *
      * Gets the list of fully qualified {@link java.net.URL}s to communicate with eureka
      * server.
      *

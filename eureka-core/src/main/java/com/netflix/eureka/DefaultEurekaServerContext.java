@@ -43,7 +43,7 @@ public class DefaultEurekaServerContext implements EurekaServerContext {
 
     private final EurekaServerConfig serverConfig;
     private final ServerCodecs serverCodecs;
-    private final PeerAwareInstanceRegistry registry;
+    private final PeerAwareInstanceRegistry registry;  // InstanceRegistry
     private final PeerEurekaNodes peerEurekaNodes;
     private final ApplicationInfoManager applicationInfoManager;
 
@@ -64,6 +64,7 @@ public class DefaultEurekaServerContext implements EurekaServerContext {
     @Override
     public void initialize() {
         logger.info("Initializing ...");
+        // 节点信息同步
         peerEurekaNodes.start();
         try {
             registry.init(peerEurekaNodes);

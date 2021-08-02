@@ -126,13 +126,15 @@ public class PeerEurekaNodes {
     }
 
     /**
+     * 获取eureka server 集群中其他节点的url
+     *
      * Resolve peer URLs.
-     *  获取eureka server 集群中其他节点的url
      * @return peer URLs with node's own URL filtered out
      */
     protected List<String> resolvePeerUrls() {
-        // 节点本身的一些信息
+        // 节点自身的一些信息
         InstanceInfo myInfo = applicationInfoManager.getInfo();
+        // 获取可用区
         String zone = InstanceInfo.getZone(clientConfig.getAvailabilityZones(clientConfig.getRegion()), myInfo);
 
         // 从配置文章中读取 eureka.client.service-url 配置
@@ -153,6 +155,7 @@ public class PeerEurekaNodes {
     }
 
     /**
+     * 给出一组新的复制URL，销毁不再可用的PeerEurekaNodes，并创建新的。
      *
      * Given new set of replica URLs, destroy {@link PeerEurekaNode}s no longer available, and
      * create new ones.
@@ -176,7 +179,7 @@ public class PeerEurekaNodes {
 
         // Remove peers no long available
         List<PeerEurekaNode> newNodeList = new ArrayList<>(peerEurekaNodes);
-
+        // 如果发生变更，对移除的node执行shtdown 操作
         if (!toShutdown.isEmpty()) {
             logger.info("Removing no longer available peer nodes {}", toShutdown);
             int i = 0;

@@ -306,7 +306,7 @@ public interface EurekaServerConfig {
     long getASGCacheExpiryTimeoutMs();
 
     /**
-     * 获取注册表有效载荷在缓存中应保留的时间，如果它没有被变更事件所失效。
+     * 获取注册表有效载荷在缓存中应保留的时间，如果它没有被变更事件所失效。默认180s
      *
      * Gets the time for which the registry payload should be kept in the cache
      * if it is not invalidated by change events.
@@ -389,6 +389,8 @@ public interface EurekaServerConfig {
     boolean shouldSyncWhenTimestampDiffers();
 
     /**
+     * 获取eureka节点在启动期间尝试从对等节点获取注册表信息的次数。
+     *
      * Get the number of times that a eureka node would try to get the registry
      * information from the peers during startup.
      *
@@ -397,6 +399,8 @@ public interface EurekaServerConfig {
     int getRegistrySyncRetries();
 
     /**
+     * 获取每次重试同步尝试之间的等待/休眠时间(如果上一次重试失败且有更多重试要尝试)。
+     *
      * Get the wait/sleep time between each retry sync attempts, if the prev retry failed and there are
      * more retries to attempt.
      *
@@ -589,6 +593,8 @@ public interface EurekaServerConfig {
     String getRemoteRegionTrustStorePassword();
 
     /**
+     * 如果本地区域没有该应用程序的实例，将禁用回退到远程区域的应用程序（如果已配置）的旧行为。
+     *
      * Old behavior of fallback to applications in the remote region (if configured) if there are no instances of that
      * application in the local region, will be disabled.
      *
@@ -712,6 +718,8 @@ public interface EurekaServerConfig {
     String getExperimental(String name);
 
     /**
+     * 获取ResponseCache的容量，默认值为1000。
+     *
      * Get the capacity of responseCache, default value is 1000.
      *
      * @return the capacity of responseCache.

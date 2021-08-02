@@ -18,6 +18,19 @@ import java.util.Map;
  */
 public interface InstanceRegistry extends LeaseManager<InstanceInfo>, LookupService<String> {
 
+     /**
+      * 开放流量
+      * 看了下底层代码，大概做3件事：
+      * 1. 更新自我保护的一些信息
+      * 2. aws特殊处理
+      * 3. 设置自身实例状态为applicationInfoManager.setInstanceStatus(InstanceStatus.UP);
+      *
+      * @param applicationInfoManager
+      * @param count
+      * @return void
+      * @author xiaohu
+      * @date 2021/8/2
+      **/
     void openForTraffic(ApplicationInfoManager applicationInfoManager, int count);
 
     void shutdown();

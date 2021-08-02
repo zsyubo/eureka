@@ -15,6 +15,8 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
+ * 这个类包含了以前在DiscoveryClient中发现的一些实用功能，但应该在其他地方。它*还没有*清理移动的代码。
+ *
  * This class contains some of the utility functions previously found in DiscoveryClient, but should be elsewhere.
  * It *does not yet* clean up the moved code.
  */
@@ -63,6 +65,8 @@ public class EndpointUtils {
     }
 
     /**
+     * 为eureka客户端获取所有eureka服务的URL列表，以便与之对话
+     *
      * Get the list of all eureka service urls for the eureka client to talk to.
      *
      * @param clientConfig the clientConfig to use
@@ -73,6 +77,7 @@ public class EndpointUtils {
      */
     public static List<String> getDiscoveryServiceUrls(EurekaClientConfig clientConfig, String zone, ServiceUrlRandomizer randomizer) {
         boolean shouldUseDns = clientConfig.shouldUseDnsForFetchingServiceUrls();
+        // 使用dns
         if (shouldUseDns) {
             return getServiceUrlsFromDNS(clientConfig, zone, clientConfig.shouldPreferSameZoneEureka(), randomizer);
         }
@@ -180,6 +185,7 @@ public class EndpointUtils {
     }
 
     /**
+     * 从属性文件中获取所有eureka服务的URL列表，以便eureka客户端与之对话。
      * Get the list of all eureka service urls from properties file for the eureka client to talk to.
      *
      * @param clientConfig the clientConfig to use
@@ -189,6 +195,7 @@ public class EndpointUtils {
      */
     public static List<String> getServiceUrlsFromConfig(EurekaClientConfig clientConfig, String instanceZone, boolean preferSameZone) {
         List<String> orderedUrls = new ArrayList<String>();
+        // 从配置信息获取默认region  默认为：default
         String region = getRegion(clientConfig);
         String[] availZones = clientConfig.getAvailabilityZones(clientConfig.getRegion());
         if (availZones == null || availZones.length == 0) {
@@ -369,6 +376,7 @@ public class EndpointUtils {
     }
 
     /**
+     * 获取该实例要拉取的区域。
      * Gets the zone to pick up for this instance.
      */
     private static int getZoneOffset(String myZone, boolean preferSameZone, String[] availZones) {
