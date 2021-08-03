@@ -34,6 +34,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 一个获取特定实例信息的jersey资源。
+ *
  * A <em>jersey</em> resource that gets information about a particular instance.
  *
  * @author Karthik Ranganathan, Greg Kim

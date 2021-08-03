@@ -44,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 一个处理特定实例的操作的jersey资源。
  * A <em>jersey</em> resource that handles operations for a particular instance.
  *
  * @author Karthik Ranganathan, Greg Kim
@@ -88,6 +89,8 @@ public class InstanceResource {
     }
 
     /**
+     * 一个来自客户实例的续租请求。
+     *
      * A put request for renewing lease from a client instance.
      *
      * @param isReplication
