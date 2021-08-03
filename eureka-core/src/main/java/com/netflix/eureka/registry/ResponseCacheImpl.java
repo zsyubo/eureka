@@ -165,6 +165,7 @@ public class ResponseCacheImpl implements ResponseCache {
                             }
                         });
         if (shouldUseReadOnlyResponseCache) {
+            // job，默认30s
             timer.schedule(getCacheUpdateTask(),
                     new Date(((System.currentTimeMillis() / responseCacheUpdateIntervalMs) * responseCacheUpdateIntervalMs)
                             + responseCacheUpdateIntervalMs),
@@ -190,7 +191,9 @@ public class ResponseCacheImpl implements ResponseCache {
                     }
                     try {
                         CurrentRequestVersion.set(key.getVersion());
+                        // 从写缓存中拿取key
                         Value cacheValue = readWriteCacheMap.get(key);
+                        // 拿出现值
                         Value currentCacheValue = readOnlyCacheMap.get(key);
                         if (cacheValue != currentCacheValue) {
                             readOnlyCacheMap.put(key, cacheValue);
@@ -282,6 +285,8 @@ public class ResponseCacheImpl implements ResponseCache {
     }
 
     /**
+     * 对给定的键列表中的缓存信息进行无效处理。
+     * 
      * Invalidate the cache information given the list of keys.
      *
      * @param keys the list of keys for which the cache information needs to be invalidated.
@@ -290,7 +295,7 @@ public class ResponseCacheImpl implements ResponseCache {
         for (Key key : keys) {
             logger.debug("Invalidating the response cache key : {} {} {} {}, {}",
                     key.getEntityType(), key.getName(), key.getVersion(), key.getType(), key.getEurekaAccept());
-
+            // 丢弃key键的任何缓存值。
             readWriteCacheMap.invalidate(key);
             Collection<Key> keysWithRegions = regionSpecificKeys.get(key);
             if (null != keysWithRegions && !keysWithRegions.isEmpty()) {

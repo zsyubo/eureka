@@ -346,6 +346,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
                     vip = instanceInfo.getVIPAddress();
                     svip = instanceInfo.getSecureVipAddress();
                 }
+                // 清理对应缓存
                 invalidateCache(appName, vip, svip);
                 logger.info("Cancelled instance {}/{} (replication={})", appName, id, isReplication);
             }
@@ -596,6 +597,8 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     }
 
     /**
+     * 驱逐实例注册表中所有已经过期的东西，如果过期被启用的话。
+     *
      * Evicts everything in the instance registry that has expired, if expiry is enabled.
      *
      * @see com.netflix.eureka.lease.LeaseManager#evict()
@@ -616,7 +619,8 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
         // We collect first all expired items, to evict them in random order. For large eviction sets,
         // if we do not that, we might wipe out whole apps before self preservation kicks in. By randomizing it,
         // the impact should be evenly distributed across all applications.
-        List<Lease<InstanceInfo>> expiredLeases = new ArrayList<>();
+        // 我们首先收集所有过期的项目，以随机顺序驱逐它们。对于大型驱逐集来说。 如果我们不这样做，我们可能会在自我保护开始之前就把整个应用程序都消灭掉。通过随机化处理。影响应该均匀地分布在所有的应用程序中。
+        List<Lease<InstanceInfo>> expiredLeases = new ArrayList<>(); // 存过期
         for (Entry<String, Map<String, Lease<InstanceInfo>>> groupEntry : registry.entrySet()) {
             Map<String, Lease<InstanceInfo>> leaseMap = groupEntry.getValue();
             if (leaseMap != null) {
@@ -650,6 +654,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
                 String id = lease.getHolder().getId();
                 EXPIRED.increment();
                 logger.warn("DS: Registry: expired lease for {}/{}", appName, id);
+                // 过期驱逐
                 internalCancel(appName, id, false);
             }
         }
@@ -1284,6 +1289,8 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
         }
 
         /**
+         * 计算一个补偿时间，定义为该任务自前次迭代以来执行的实际时间，与配置的执行时间相比。这对于时间变化（例如由于时钟偏移或gc）导致实际驱逐任务的执行晚于根据配置的周期所需的时间的情况很有用。
+         *
          * compute a compensation time defined as the actual time this task was executed since the prev iteration,
          * vs the configured amount of time for execution. This is useful for cases where changes in time (due to
          * clock skew or gc for example) causes the actual eviction task to execute later than the desired time
