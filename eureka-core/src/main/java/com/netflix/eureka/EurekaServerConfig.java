@@ -272,6 +272,8 @@ public interface EurekaServerConfig {
     long getDeltaRetentionTimerIntervalInMs();
 
     /**
+     * 获取过期实例的任务应该唤醒和运行的时间间隔。默认60s
+     *
      * Get the time interval with which the task that expires instances should
      * wake up and run.
      *

@@ -234,7 +234,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
                     if (this.expectedNumberOfClientsSendingRenews > 0) {
                         // Since the client wants to register it, increase the number of clients sending renews
                         this.expectedNumberOfClientsSendingRenews = this.expectedNumberOfClientsSendingRenews + 1;
-                        updateRenewsPerMinThreshold(); //处理自我保护机制(每分钟能接收的最少续租次数)
+                        updateRenewsPerMinThreshold(); //处理自我保护机制(每分钟能接收的最少续租次数)，，就是去计算自我保护数量
                         // 每分钟能接收的最少续租次数 = 微服务实例总数 * ( 60秒 / 实例续约时间间隔 ) * 有效心跳比率
                     }
                 }
@@ -1247,11 +1247,14 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     }
 
     protected void postInit() {
+        // 不知道是啥意思
         renewsLastMin.start();
         if (evictionTaskRef.get() != null) {
             evictionTaskRef.get().cancel();
         }
         evictionTaskRef.set(new EvictionTask());
+
+        // 此定时任务清理到期的实例
         evictionTimer.schedule(evictionTaskRef.get(),
                 serverConfig.getEvictionIntervalTimerInMs(),
                 serverConfig.getEvictionIntervalTimerInMs());
@@ -1280,6 +1283,9 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
         @Override
         public void run() {
             try {
+                // 计算出补偿时间
+                // 定时器可能比设定的时间更晚触发，原因可能是GC等。假设本来要在上一次执行后60s再次触发，但因为GC在第70秒才被触发，这时去检查有没有lease有没有超期无renew不能用70s来算，
+                // 而应该还用60s来算，因为在这10s的GC时间中，很可能此服务端无法处理注册请求。补偿的10s就是这个意思，就是允许实例多超期这10s。
                 long compensationTimeMs = getCompensationTimeMs();
                 logger.info("Running the evict task with compensationTime {}ms", compensationTimeMs);
                 evict(compensationTimeMs);
@@ -1290,6 +1296,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
 
         /**
          * 计算一个补偿时间，定义为该任务自前次迭代以来执行的实际时间，与配置的执行时间相比。这对于时间变化（例如由于时钟偏移或gc）导致实际驱逐任务的执行晚于根据配置的周期所需的时间的情况很有用。
+         * <p></p>
          *
          * compute a compensation time defined as the actual time this task was executed since the prev iteration,
          * vs the configured amount of time for execution. This is useful for cases where changes in time (due to
@@ -1297,15 +1304,17 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
          * according to the configured cycle.
          */
         long getCompensationTimeMs() {
+            // 拿取当前时间
             long currNanos = getCurrentTimeNano();
+            // 拿取上一次的时间，并设置为当前时间。
             long lastNanos = lastExecutionNanosRef.getAndSet(currNanos);
             if (lastNanos == 0l) {
                 return 0l;
             }
-
+            // 时间差值
             long elapsedMs = TimeUnit.NANOSECONDS.toMillis(currNanos - lastNanos);
             long compensationTime = elapsedMs - serverConfig.getEvictionIntervalTimerInMs();
-            return compensationTime <= 0l ? 0l : compensationTime;
+            return compensationTime <= 0l ? 0l : compensationTime; // 时间差值大于运行周期时间
         }
 
         long getCurrentTimeNano() {  // for testing
