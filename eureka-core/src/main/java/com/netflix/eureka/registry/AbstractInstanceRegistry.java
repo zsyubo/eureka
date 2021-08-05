@@ -104,6 +104,8 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     private final AtomicReference<EvictionTask> evictionTaskRef = new AtomicReference<EvictionTask>();
 
     protected String[] allKnownRemoteRegions = EMPTY_STR_ARRAY;
+
+    // 每分钟续订的阈值。  通过updateRenewsPerMinThreshold()方法计算出来
     protected volatile int numberOfRenewsPerMinThreshold;
     // 在子类InstanceRegistry做的初始化，，，我感觉这个里面存的注册的服务实例数量(总)
     protected volatile int expectedNumberOfClientsSendingRenews;
@@ -312,6 +314,8 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     }
 
     /**
+     * cancel(String、String、boolean)方法被PeerAwareInstanceRegistry覆盖，因此每个cancel请求都被复制到对等方。然而，这对于将在远程对等体中被算作有效取消的过期是不期望的，因此自我保存模式不会启动。
+     *
      * {@link #cancel(String, String, boolean)} method is overridden by {@link PeerAwareInstanceRegistry}, so each
      * cancel request is replicated to the peers. This is however not desired for expires which would be counted
      * in the remote peers as valid cancellations, so self preservation mode would not kick-in.
@@ -608,11 +612,12 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
         evict(0l);
     }
 
-    public void evict(long additionalLeaseMs) {
+    public void evict(long additionalLeaseMs) {  // additionalLeaseMs  补偿时间
         logger.debug("Running the evict task");
 
         if (!isLeaseExpirationEnabled()) {
             logger.debug("DS: lease expiration is currently disabled.");
+            // 返回false才进
             return;
         }
 
@@ -1164,7 +1169,8 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
         return info;
     }
 
-    /**
+    /** 最近一分钟的心态总数
+     *
      * Servo route; do not call.
      *
      * @return servo data

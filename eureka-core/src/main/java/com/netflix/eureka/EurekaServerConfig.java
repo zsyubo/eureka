@@ -95,6 +95,11 @@ public interface EurekaServerConfig {
     int getEIPBindingRetryIntervalMs();
 
     /**
+     * 检查eureka服务器是否已启用自我保护。 默认true
+     * 启用后，服务器会跟踪它应该从服务器收到的续订数量。任何时候，如果续订数量低于getRenewalPercentThreshold()定义的阈值百分比，
+     * 服务器都会关闭过期以避免危险。这将有助于服务器在客户端和服务器之间出现网络问题时维护注册表信息。
+     * 这些更改在运行时有效。
+     * <p></p>
      * Checks to see if the eureka server is enabled for self preservation.
      *
      * <p>

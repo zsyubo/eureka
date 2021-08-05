@@ -112,7 +112,7 @@ public class Lease<T> {
     /**
      * 检查给定的 com.netflix.appinfo.InstanceInfo 的租约是否已经过期。请注意，由于 renew() 做了 "错误 "的事情，将 lastUpdateTimestamp 设置为 +duration，而不是它应该是的，所以过期的时间实际上是 2 * duration。
      * 这是一个小错误，应该只影响那些不体面地关闭的实例。由于可能对现有的使用产生广泛的影响，这将不会被修复。
-     *
+     * <p></p>
      * Checks if the lease of a given {@link com.netflix.appinfo.InstanceInfo} has expired or not.
      *
      * Note that due to renew() doing the 'wrong" thing and setting lastUpdateTimestamp to +duration more than

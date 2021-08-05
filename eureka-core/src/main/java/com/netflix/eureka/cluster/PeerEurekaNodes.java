@@ -193,7 +193,7 @@ public class PeerEurekaNodes {
                 }
             }
         }
-
+        // todo  核心 创建PeerEurekaNode
         // Add new peers
         if (!toAdd.isEmpty()) {
             logger.info("Adding new peer nodes {}", toAdd);

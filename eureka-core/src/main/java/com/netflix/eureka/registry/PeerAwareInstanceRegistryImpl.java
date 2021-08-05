@@ -498,10 +498,12 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
 
     @Override
     public boolean isLeaseExpirationEnabled() {
-        if (!isSelfPreservationModeEnabled()) {
+        if (!isSelfPreservationModeEnabled()) { // 自我保护关闭才进
+            // 自我保存模式被禁用，因此允许实例过期。
             // The self preservation mode is disabled, hence allowing the instances to expire.
             return true;
         }
+        // 判断续约数是否达到预期值
         return numberOfRenewsPerMinThreshold > 0 && getNumOfRenewsInLastMin() > numberOfRenewsPerMinThreshold;
     }
 
@@ -511,6 +513,11 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
     }
 
     /**
+     * 检查是否启用了自我保护模式。
+     * 如果每分钟预期的更新次数getNumOfRenewsInLastMin()小于预期的阈值（由getNumOfRenewsPerMinThreshold()决定），则启用自我保护模式。
+     * Eureka认为这是个危险，并停止过期的实例，因为这很可能是因为网络事件。
+     * 只有当更新量恢复到阈值以上，或者当标志EurekaServerConfig.shouldEnableSelfPreservation()被设置为false时，该模式才会被禁用。
+     *
      * Checks to see if the self-preservation mode is enabled.
      *
      * <p>

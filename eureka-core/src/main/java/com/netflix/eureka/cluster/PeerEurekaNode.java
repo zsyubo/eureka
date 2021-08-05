@@ -123,6 +123,8 @@ public class PeerEurekaNode {
     }
 
     /**
+     * 将该节点接收到的InstanceInfo的注册信息发送给该类表示的对等节点。
+     * <p></p>
      * Sends the registration information of {@link InstanceInfo} receiving by
      * this node to the peer node represented by this class.
      *
