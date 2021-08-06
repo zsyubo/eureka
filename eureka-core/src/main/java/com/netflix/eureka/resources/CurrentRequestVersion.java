@@ -20,6 +20,8 @@ package com.netflix.eureka.resources;
 import com.netflix.eureka.Version;
 
 /**
+ * ThredLocal
+ *
  * A thread-scoped value that holds the "current {@link com.netflix.eureka.Version}" for the
  * request.
  *

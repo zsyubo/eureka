@@ -92,6 +92,7 @@ public class ApplicationsResource {
     public ApplicationResource getApplicationResource(
             @PathParam("version") String version,
             @PathParam("appId") String appId) {
+        // 使用了ThredLocal技术
         CurrentRequestVersion.set(Version.toEnum(version));
         try {
             return new ApplicationResource(appId, serverConfig, registry);

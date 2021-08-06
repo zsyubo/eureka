@@ -209,6 +209,9 @@ public class ResponseCacheImpl implements ResponseCache {
     }
 
     /**
+     * 获取应用程序的缓存信息。
+     * 如果缓存的信息不可用，它将在第一次请求时生成。在第一次请求之后，信息由后台线程定期更新。
+     * <p></p>
      * Get the cached information about applications.
      *
      * <p>
@@ -374,6 +377,7 @@ public class ResponseCacheImpl implements ResponseCache {
                 if (currentPayload != null) {
                     payload = currentPayload;
                 } else {
+                    // 从二级缓存中获取，放入三级缓存
                     payload = readWriteCacheMap.get(key);
                     readOnlyCacheMap.put(key, payload);
                 }
