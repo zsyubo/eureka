@@ -891,6 +891,9 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     }
 
     /**
+     * 获取有关增量更改的注册表信息。增量被缓存在由EureKaserverconfig.getretentionTimeIndelTaqueue()指定的窗口中。
+     * 后续的增量信息请求可能会返回相同的信息，客户端必须确保这不会对它们产生不利影响。
+     *
      * Get the registry information about the delta changes. The deltas are
      * cached for a window specified by
      * {@link EurekaServerConfig#getRetentionTimeInMSInDeltaQueue()}. Subsequent
@@ -958,7 +961,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     /**
      * 获取应用程序delta，也包括来自通过的远程区域的实例，以及来自本地区域的实例。如果该应用程序没有出现在EurekaServerConfig.getRemoteRegionAppWhitelist(String)为某一地区指定的白名单中，可以进一步限制选择实例的远程地区。
      * 如果没有为一个地区定义白名单，该方法也将通过向EurekaServerConfig.getRemoteRegionAppWhitelist(String)方法传递null来寻找一个全球白名单。
-     *
+     * <p></p>
      * Gets the application delta also including instances from the passed remote regions, with the instances from the
      * local region. <br/>
      *

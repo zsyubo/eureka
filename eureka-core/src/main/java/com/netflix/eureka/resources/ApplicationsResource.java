@@ -102,6 +102,8 @@ public class ApplicationsResource {
     }
 
     /**
+     * 获取所有注册信息
+     * <p></p>
      * Get information about all {@link com.netflix.discovery.shared.Applications}.
      *
      * @param version the version of the request.
@@ -137,17 +139,19 @@ public class ApplicationsResource {
         // Check if the server allows the access to the registry. The server can
         // restrict access if it is not
         // ready to serve traffic depending on various reasons.
+        // 是否允许注册， 不允许则返回403
         if (!registry.shouldAllowAccess(isRemoteRegionRequested)) {
             return Response.status(Status.FORBIDDEN).build();
         }
         CurrentRequestVersion.set(Version.toEnum(version));
         KeyType keyType = Key.KeyType.JSON;
         String returnMediaType = MediaType.APPLICATION_JSON;
+        // 判断
         if (acceptHeader == null || !acceptHeader.contains(HEADER_JSON_VALUE)) {
             keyType = Key.KeyType.XML;
             returnMediaType = MediaType.APPLICATION_XML;
         }
-
+        //  从缓存中抓取
         Key cacheKey = new Key(Key.EntityType.Application,
                 ResponseCacheImpl.ALL_APPS,
                 keyType, CurrentRequestVersion.get(), EurekaAccept.fromString(eurekaAccept), regions
@@ -168,6 +172,11 @@ public class ApplicationsResource {
     }
 
     /**
+     * 获取所有delta变化的信息
+     * 增量更改表示在eurekserverconfig.getretentiontimemsindelqueue()配置的时间段内的注册表信息更改。
+     * 注册表中可能发生的更改包括注册、取消、状态更改和过期。通常对注册表的更改是不频繁的，因此只获取增量比获取完整的注册表要高效得多。
+     * 由于增量信息是在一段时间内缓存的，因此请求可能会在eurekserverconfig.getretentiontimemsindelqueue()配置的窗口内多次返回相同的数据。客户需要处理这些重复的信息。
+     * <p></p>
      * Get information about all delta changes in {@link com.netflix.discovery.shared.Applications}.
      *
      * <p>
@@ -228,7 +237,7 @@ public class ApplicationsResource {
             keyType = Key.KeyType.XML;
             returnMediaType = MediaType.APPLICATION_XML;
         }
-
+        // ALL_APPS_DELTA
         Key cacheKey = new Key(Key.EntityType.Application,
                 ResponseCacheImpl.ALL_APPS_DELTA,
                 keyType, CurrentRequestVersion.get(), EurekaAccept.fromString(eurekaAccept), regions

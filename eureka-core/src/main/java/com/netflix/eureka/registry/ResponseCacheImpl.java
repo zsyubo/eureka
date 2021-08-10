@@ -437,7 +437,7 @@ public class ResponseCacheImpl implements ResponseCache {
                 case Application:
                     boolean isRemoteRegionRequested = key.hasRegions();
 
-                    if (ALL_APPS.equals(key.getName())) {
+                    if (ALL_APPS.equals(key.getName())) { // 全新已注册实例信息
                         if (isRemoteRegionRequested) {
                             // 远程分区？
                             tracer = serializeAllAppsWithRemoteRegionTimer.start();
@@ -446,7 +446,7 @@ public class ResponseCacheImpl implements ResponseCache {
                             tracer = serializeAllAppsTimer.start();
                             payload = getPayLoad(key, registry.getApplications()); // 直接从注册表中拿
                         }
-                    } else if (ALL_APPS_DELTA.equals(key.getName())) {
+                    } else if (ALL_APPS_DELTA.equals(key.getName())) { // 增量信息
                         if (isRemoteRegionRequested) {
                             tracer = serializeDeltaAppsWithRemoteRegionTimer.start();
                             versionDeltaWithRegions.incrementAndGet();
@@ -457,9 +457,10 @@ public class ResponseCacheImpl implements ResponseCache {
                             tracer = serializeDeltaAppsTimer.start();
                             versionDelta.incrementAndGet();
                             versionDeltaLegacy.incrementAndGet();
+                            // 就是取出 recentlyChangedQueue 中的数据
                             payload = getPayLoad(key, registry.getApplicationDeltas());
                         }
-                    } else {
+                    } else { //自定义的？
                         tracer = serializeOneApptimer.start();
                         payload = getPayLoad(key, registry.getApplication(key.getName()));
                     }

@@ -411,6 +411,9 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
     }
 
     /**
+     * 注册关于InstanceInfo的信息，并将该信息复制到所有对等尤里卡节点。
+     * 如果这是来自其他复制副本节点的复制事件，则不会被复制。
+     * <p></p>
      * Registers the information about the {@link InstanceInfo} and replicates
      * this information to all peer eureka nodes. If this is replication event
      * from other replica nodes then it is not replicated.
@@ -428,6 +431,7 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
             leaseDuration = info.getLeaseInfo().getDurationInSecs();
         }
         super.register(info, leaseDuration, isReplication);
+        // 复制注册信息到其他对等节点
         replicateToPeers(Action.Register, info.getAppName(), info.getId(), info, null, isReplication);
     }
 
@@ -654,6 +658,8 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
     }
 
     /**
+     * 将所有eureka操作复制到对等eureka节点，但复制到该节点的流量除外。
+     * <p></p>
      * Replicates all eureka actions to peer eureka nodes except for replication
      * traffic to this node.
      *
@@ -673,9 +679,10 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
 
             for (final PeerEurekaNode node : peerEurekaNodes.getPeerEurekaNodes()) {
                 // If the url represents this host, do not replicate to yourself.
-                if (peerEurekaNodes.isThisMyUrl(node.getServiceUrl())) {
+                if (peerEurekaNodes.isThisMyUrl(node.getServiceUrl())) { // 自己除外
                     continue;
                 }
+                // 实际底层
                 replicateInstanceActionsToPeers(action, appName, id, info, newStatus, node);
             }
         } finally {
@@ -684,6 +691,8 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
     }
 
     /**
+     * 所有实例更改复制到对等eureka节点，但到该节点的复制流量除外。
+     *
      * Replicates all instance changes to peer eureka nodes except for
      * replication traffic to this node.
      *
