@@ -420,12 +420,13 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
      *
      * @param info
      *            the {@link InstanceInfo} to be registered and replicated.
-     * @param isReplication
+     * @param isReplication  如果是对等复制，那么为true，客户端注册为false
      *            true if this is a replication event from other replica nodes,
      *            false otherwise.
      */
     @Override
     public void register(final InstanceInfo info, final boolean isReplication) {
+        // 最后更新时间
         int leaseDuration = Lease.DEFAULT_DURATION_IN_SECS;
         if (info.getLeaseInfo() != null && info.getLeaseInfo().getDurationInSecs() > 0) {
             leaseDuration = info.getLeaseInfo().getDurationInSecs();

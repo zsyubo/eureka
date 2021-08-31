@@ -992,6 +992,8 @@ public class InstanceInfo {
     }
 
     /**
+     * 返回实例的状态。
+     *
      * Returns the status of the instance.
      *
      * @return the status indicating whether the instance can handle requests.
