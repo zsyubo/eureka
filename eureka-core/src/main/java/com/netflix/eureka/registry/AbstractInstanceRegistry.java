@@ -192,6 +192,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
 
     /**
      * 注册一个具有给定期限的新实例。
+     *
      * Registers a new instance with a given duration.
      *
      * @see com.netflix.eureka.lease.LeaseManager#register(java.lang.Object, int, boolean)
@@ -246,6 +247,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
             if (existingLease != null) {
                 lease.setServiceUpTimestamp(existingLease.getServiceUpTimestamp());
             }
+            // 重点：把实例注册到本地map。
             gMap.put(registrant.getId(), lease);
             recentRegisteredQueue.add(new Pair<Long, String>(
                     System.currentTimeMillis(),
