@@ -1299,7 +1299,6 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
                 logger.info("Running the evict task with compensationTime {}ms", compensationTimeMs);
                 evict(compensationTimeMs);
             } catch (Throwable e) {
-                logger.error("Could not run the evict task", e);
             }
         }
 

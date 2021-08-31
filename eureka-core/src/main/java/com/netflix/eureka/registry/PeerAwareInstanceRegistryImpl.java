@@ -344,6 +344,8 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
     }
 
     /**
+     * 检查注册表访问是否被允许，或者服务器是否处于无法获取所有注册表信息的情况。如果服务器在启动时无法从对等的尤里卡节点获取注册表信息，则它不会在指定的时间段内返回注册表信息。
+     * <p></p>
      * Checks to see if the registry access is allowed or the server is in a
      * situation where it does not all getting registry information. The server
      * does not return registry information for a period specified in

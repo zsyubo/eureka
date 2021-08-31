@@ -188,6 +188,8 @@ public class InstanceResource {
     }
 
     /**
+     * 删除实例的状态覆盖，用状态日期(字符串，字符串，字符串)设置。
+     * <p></p>
      * Removes status override for an instance, set with
      * {@link #statusUpdate(String, String, String)}.
      *
