@@ -80,6 +80,9 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     private final ConcurrentHashMap<String, Map<String, Lease<InstanceInfo>>> registry
             = new ConcurrentHashMap<String, Map<String, Lease<InstanceInfo>>>();
     protected Map<String, RemoteRegionRegistry> regionNameVSRemoteRegistry = new HashMap<String, RemoteRegionRegistry>();
+    /**
+     * 覆盖状态map
+     */
     protected final ConcurrentMap<String, InstanceStatus> overriddenInstanceStatusMap = CacheBuilder
             .newBuilder().initialCapacity(500)
             .expireAfterAccess(1, TimeUnit.HOURS)
@@ -127,6 +130,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
 
         this.renewsLastMin = new MeasuredRate(1000 * 60 * 1);
 
+        // 清理recentCanceledQueue， 默认30秒一次，，超过3分钟的将被清理
         this.deltaRetentionTimer.schedule(getDeltaRetentionTask(),
                 serverConfig.getDeltaRetentionTimerIntervalInMs(),
                 serverConfig.getDeltaRetentionTimerIntervalInMs());
@@ -197,7 +201,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
      *
      * @see com.netflix.eureka.lease.LeaseManager#register(java.lang.Object, int, boolean)
      */
-    public void register(InstanceInfo registrant/**准备处理的节点信息**/, int leaseDuration, boolean isReplication/**为true**/) {
+    public void register(InstanceInfo registrant/**准备处理的节点信息**/, int leaseDuration /**剔除时间**/, boolean isReplication/**是否是对等节点复制操作**/) {
         read.lock();
         try {
             // 本地服务实例列表   registrant.getAppName() 是应用名称
@@ -224,6 +228,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
 
                 // this is a > instead of a >= because if the timestamps are equal, we still take the remote transmitted
                 // InstanceInfo instead of the server local copy.
+                // 主要主要是为了保留最新的实例信息
                 if (existingLastDirtyTimestamp > registrationLastDirtyTimestamp) {
                     logger.warn("There is an existing lease and the existing lease's dirty timestamp {} is greater" +
                             " than the one that is being registered {}", existingLastDirtyTimestamp, registrationLastDirtyTimestamp);
@@ -231,7 +236,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
                     registrant = existingLease.getHolder();
                 }
             } else {
-                // 该租约不存在，因此是一个新的登记。
+                // 该租约不存在，因此是一个新的登记。这里需要重新计算下自我保护最少实例
                 // The lease does not exist and hence it is a new registration
                 synchronized (lock) {
                     if (this.expectedNumberOfClientsSendingRenews > 0) {
@@ -245,17 +250,17 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
             }
             Lease<InstanceInfo> lease = new Lease<InstanceInfo>(registrant, leaseDuration);
             if (existingLease != null) {
-                lease.setServiceUpTimestamp(existingLease.getServiceUpTimestamp());
+                lease.setServiceUpTimestamp(existingLease.getServiceUpTimestamp()); // up time
             }
-            // 重点：把实例注册到本地map。
+            //todo 重点：把实例注册到本地map。
             gMap.put(registrant.getId(), lease);
             recentRegisteredQueue.add(new Pair<Long, String>(
                     System.currentTimeMillis(),
                     registrant.getAppName() + "(" + registrant.getId() + ")"));
             // This is where the initial state transfer of overridden status happens
 
-            // 一个registrant最开始就是UNKNOWN状态
-            // 这地方的意思是当覆盖状态发生变动，才去放到Map
+            // 客户端注册时最开始就是UNKNOWN状态(server节点间同步时不一定为UNKNOWN)
+            // 这地方的意思是当覆盖状态发生变动，才去放到Map      很简单，如果有状态，那么放入map中
             if (!InstanceStatus.UNKNOWN.equals(registrant.getOverriddenStatus())) {
                 logger.debug("Found overridden status {} for instance {}. Checking to see if needs to be add to the "
                                 + "overrides", registrant.getOverriddenStatus(), registrant.getId());
@@ -372,6 +377,8 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     }
 
     /**
+     * 标记给定应用程序名称的给定实例为更新，并标记它是否来自于复制。
+     *
      * Marks the given instance of the given app name as renewed, and also marks whether it originated from
      * replication.
      *
@@ -384,33 +391,39 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
         if (gMap != null) {
             leaseToRenew = gMap.get(id);
         }
-        if (leaseToRenew == null) {
+        if (leaseToRenew == null) { // 说明没有注册过，让客户端先注册
             RENEW_NOT_FOUND.increment(isReplication);
             logger.warn("DS: Registry: lease doesn't exist, registering resource: {} - {}", appName, id);
             return false;
         } else {
+            // instanceInfo 是服务端保存的，和客户端没撒关系
             InstanceInfo instanceInfo = leaseToRenew.getHolder();
             if (instanceInfo != null) {
                 // touchASGCache(instanceInfo.getASGName());
+                // 处理overriddenInstanceStatus
                 InstanceStatus overriddenInstanceStatus = this.getOverriddenInstanceStatus(
                         instanceInfo, leaseToRenew, isReplication);
+                // 如果为unknown，unknown说明这个应用没走完注册流程，让客户端重新去注册
                 if (overriddenInstanceStatus == InstanceStatus.UNKNOWN) {
                     logger.info("Instance status UNKNOWN possibly due to deleted override for instance {}"
                             + "; re-register required", instanceInfo.getId());
                     RENEW_NOT_FOUND.increment(isReplication);
                     return false;
                 }
+                // 如果overriddenInstanceStatus 和客户端传入的状态不一致
                 if (!instanceInfo.getStatus().equals(overriddenInstanceStatus)) {
                     logger.info(
                             "The instance status {} is different from overridden instance status {} for instance {}. "
                                     + "Hence setting the status to overridden status", instanceInfo.getStatus().name(),
                                     overriddenInstanceStatus.name(),
                                     instanceInfo.getId());
+                    // 使用overriddenInstanceStatus 覆盖instanceInfo的状态
                     instanceInfo.setStatusWithoutDirty(overriddenInstanceStatus);
 
                 }
             }
             renewsLastMin.increment();
+            // 刷新lastUpdateTimestamp时间
             leaseToRenew.renew();
             return true;
         }
@@ -450,6 +463,8 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     }
 
     /**
+     * 如果还没有，则存储重写的状态。这发生在更新请求的核对过程中。
+     *
      * Stores overridden status if it is not already there. This happens during
      * a reconciliation process during renewal requests.
      *
@@ -977,6 +992,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
      *                      by a whitelist as explained above. If <code>null</code> all remote regions are included.
      *                      If empty list then no remote region is included.
      *
+     *
      * @return The delta with instances from the passed remote regions as well as local region. The instances
      * from remote regions can be further be restricted as explained above. <code>null</code> if the application does
      * not exist locally or in remote regions.
@@ -1385,14 +1401,18 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     /**
      * 子类：new FirstMatchWinsCompositeRule(new DownOrStartingRule(), new OverrideExistsRule(overriddenInstanceStatusMap), new LeaseExistsRule());
      *
+     * 1. DownOrStartingRule#apply
+     * 2. OverrideExistsRule#apply   OverrideExistsRule(overriddenInstanceStatusMap)
+     * 3. LeaseExistsRule#apply
      * @return The rule that will process the instance status override.
      */
-    protected abstract InstanceStatusOverrideRule getInstanceInfoOverrideRule();
+    protected abstract InstanceStatusOverrideRule getInstanceInfoOverrideRule();  //
 
     protected InstanceInfo.InstanceStatus getOverriddenInstanceStatus(InstanceInfo r,
                                                                     Lease<InstanceInfo> existingLease,
                                                                     boolean isReplication) {
         InstanceStatusOverrideRule rule = getInstanceInfoOverrideRule();
+        // FirstMatchWinsCompositeRule
         logger.debug("Processing override status using rule: {}", rule);
         return rule.apply(r, existingLease, isReplication).status();
     }

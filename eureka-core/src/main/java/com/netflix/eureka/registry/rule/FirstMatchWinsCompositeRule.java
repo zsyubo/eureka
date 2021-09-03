@@ -16,7 +16,7 @@ import java.util.List;
  */
 public class FirstMatchWinsCompositeRule implements InstanceStatusOverrideRule {
 
-    private final InstanceStatusOverrideRule[] rules;
+    private final InstanceStatusOverrideRule[] rules; //DownOrStartingRule,OverrideExistsRule(overriddenInstanceStatusMap),LeaseExistsRule
     private final InstanceStatusOverrideRule defaultRule;
     private final String compositeRuleName;
 

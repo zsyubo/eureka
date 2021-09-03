@@ -43,26 +43,28 @@ public class Lease<T> {
 
     public static final int DEFAULT_DURATION_IN_SECS = 90;
 
-    // InstanceInfo
+    // InstanceInfo，这个其实就是客户端注册的实例信息。
     private T holder;
     // 驱逐时间戳
     private long evictionTimestamp;
-    private long registrationTimestamp;
-    private long serviceUpTimestamp;
+    private long registrationTimestamp;  // 注册时间
+    private long serviceUpTimestamp;  
     // Make it volatile so that the expiration task would see this quicker
     // 线程安全考虑
-    private volatile long lastUpdateTimestamp;
+    private volatile long lastUpdateTimestamp;  // 最后更新时间？
     private long duration;
 
     public Lease(T r, int durationInSecs) {
         holder = r;
-        registrationTimestamp = System.currentTimeMillis();
-        lastUpdateTimestamp = registrationTimestamp;
-        duration = (durationInSecs * 1000);
+        registrationTimestamp = System.currentTimeMillis(); 
+        lastUpdateTimestamp = registrationTimestamp; // 当前时间
+        duration = (durationInSecs * 1000);  // 默认90
 
     }
 
     /**
+     * 更新租约，如果相关的T在注册时指定了续约期限，则使用续约期限，否则默认期限为DEFAULT_DURATION_IN_SECS。
+     *  <p></p>
      * Renew the lease, use renewal duration if it was specified by the
      * associated {@link T} during registration, otherwise default duration is
      * {@link #DEFAULT_DURATION_IN_SECS}.

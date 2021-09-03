@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 如果我们有一个实例的现有租约是UP或OUT_OF_SERVICE，这个规则就匹配。
+ * <p></p>
  * This rule matches if we have an existing lease for the instance that is UP or OUT_OF_SERVICE.
  *
  * Created by Nikos Michalakis on 7/13/16.

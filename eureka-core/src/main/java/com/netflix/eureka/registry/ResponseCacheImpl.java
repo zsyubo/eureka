@@ -160,6 +160,7 @@ public class ResponseCacheImpl implements ResponseCache {
                                     Key cloneWithNoRegions = key.cloneWithoutRegions();
                                     regionSpecificKeys.put(cloneWithNoRegions, key);
                                 }
+                                // 根据key生成对应的缓存
                                 Value value = generatePayload(key);
                                 return value;
                             }
@@ -426,6 +427,7 @@ public class ResponseCacheImpl implements ResponseCache {
     }
 
     /*
+     * 为给定的密钥生成支付负载。
      * Generate pay load for the given key.
      */
     private Value generatePayload(Key key) {

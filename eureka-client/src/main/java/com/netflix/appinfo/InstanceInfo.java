@@ -151,8 +151,14 @@ public class InstanceInfo {
     private volatile DataCenterInfo dataCenterInfo;
     private volatile String hostName;
     private volatile InstanceStatus status = InstanceStatus.UP;
+    /**
+     * 覆盖状态, 主要是区别于客户端的状态，这样可以做一个灰度的操作，比如吧服务状态手动设置为OUT_OF_SERVICE，这样服务还在线，但是client不会去调用。
+     */
     private volatile InstanceStatus overriddenStatus = InstanceStatus.UNKNOWN;
     @XStreamOmitField
+    /**
+     * isInstanceInfoDirty 如果为true那么就表示本地数据(状态变更)没上报
+     */
     private volatile boolean isInstanceInfoDirty = false;
     private volatile LeaseInfo leaseInfo;
     @Auto
@@ -162,7 +168,7 @@ public class InstanceInfo {
     // 该实例的更新时间，当状态被更新时。
     @Auto
     private volatile Long lastUpdatedTimestamp;
-    // 获取该实例被续约的最后时间戳。
+    // 获取最后触摸时间？？(很奇怪，调试发现续约并没有更新到这个值)
     @Auto
     private volatile Long lastDirtyTimestamp;
     @Auto
@@ -1003,6 +1009,8 @@ public class InstanceInfo {
     }
 
     /**
+     * 返回实例的被覆盖状态（如果有的话）
+     * <p></p>
      * Returns the overridden status if any of the instance.
      *
      * @return the status indicating whether an external process has changed the
@@ -1093,6 +1101,7 @@ public class InstanceInfo {
     }
 
     /**
+     * 设置该实例的更新时间，当状态被更新时。
      * Set the update time for this instance when the status was update.
      */
     public void setLastUpdatedTimestamp() {
@@ -1167,6 +1176,8 @@ public class InstanceInfo {
     }
 
     /**
+     * 获取触摸此实例时的最后时间戳。
+     *
      * Gets the last time stamp when this instance was touched.
      *
      * @return last timestamp when this instance was touched.
@@ -1274,6 +1285,8 @@ public class InstanceInfo {
     }
 
     /**
+     * 设置dirty标志，同时返回isDirty事件的时间戳。
+     *
      * Set the dirty flag, and also return the timestamp of the isDirty event
      *
      * @return the timestamp when the isDirty flag is set
@@ -1290,7 +1303,7 @@ public class InstanceInfo {
      *
      * @param unsetDirtyTimestamp the expected lastDirtyTimestamp to unset.
      */
-    public synchronized void unsetIsDirty(long unsetDirtyTimestamp) {
+    public synchronized void unsetIsDirty(long unsetDirtyTimestamp /*其实就是当前时间*/) {
         if (lastDirtyTimestamp <= unsetDirtyTimestamp) {
             isInstanceInfoDirty = false;
         } else {

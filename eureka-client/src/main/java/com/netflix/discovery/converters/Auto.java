@@ -22,6 +22,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * 一个字段注解，它有助于避免每次向 com.netflix.appinfo.InstanceInfo 添加额外字段时对 Converters.InstanceInfoConverter 的更改。
+ * 这个注解通知 Converters.InstanceInfoConverter 自动调用 com.netflix.appinfo.InstanceInfo 类中声明的大多数原始字段。
+ * <p></p>
  * A field annotation which helps in avoiding changes to
  * {@link com.netflix.discovery.converters.Converters.InstanceInfoConverter} every time additional fields are added to
  * {@link com.netflix.appinfo.InstanceInfo}.

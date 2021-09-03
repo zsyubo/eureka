@@ -116,6 +116,7 @@ public class InstanceResource {
 
         // Not found in the registry, immediately ask for a register
         if (!isSuccess) {
+            // false说明客户端还没注册，所以返回404
             logger.warn("Not Found (Renew): {} - {}", app.getName(), id);
             return Response.status(Status.NOT_FOUND).build();
         }

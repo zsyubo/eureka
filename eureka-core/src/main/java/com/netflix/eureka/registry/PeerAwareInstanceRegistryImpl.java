@@ -126,6 +126,11 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
     protected final EurekaClient eurekaClient;
     protected volatile PeerEurekaNodes peerEurekaNodes;
 
+    /**
+     * 1. DownOrStartingRule
+     * 2. OverrideExistsRule(overriddenInstanceStatusMap)
+     * 3. LeaseExistsRule
+     */
     private final InstanceStatusOverrideRule instanceStatusOverrideRule;
 
     private Timer timer = new Timer(
@@ -669,13 +674,14 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
      */
     private void replicateToPeers(Action action, String appName, String id,
                                   InstanceInfo info /* optional */,
-                                  InstanceStatus newStatus /* optional */, boolean isReplication) {
+                                  InstanceStatus newStatus /* optional  传入是null*/, boolean isReplication) {
         Stopwatch tracer = action.getTimer().start();
         try {
             if (isReplication) {
                 numberOfReplicationsLastMin.increment();
             }
             // If it is a replication already, do not replicate again as this will create a poison replication
+            // 如果对等节点为空|| 对等节点的复制操作
             if (peerEurekaNodes == Collections.EMPTY_LIST || isReplication) {
                 return;
             }
@@ -686,7 +692,7 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
                     continue;
                 }
                 // 实际底层
-                replicateInstanceActionsToPeers(action, appName, id, info, newStatus, node);
+                replicateInstanceActionsToPeers(action /* Action.Register */, appName, id, info, newStatus, node);
             }
         } finally {
             tracer.stop();

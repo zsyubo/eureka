@@ -12,12 +12,39 @@ import com.netflix.discovery.shared.Applications;
  */
 public interface EurekaHttpClient {
 
+    /**
+     * 注册服务
+     * @param info
+     * @return
+     */
     EurekaHttpResponse<Void> register(InstanceInfo info);
 
+    /**
+     * 注销服务
+     * @param appName
+     * @param id
+     * @return
+     */
     EurekaHttpResponse<Void> cancel(String appName, String id);
 
+    /**
+     * 服务续约
+     * @param appName
+     * @param id
+     * @param info
+     * @param overriddenStatus
+     * @return
+     */
     EurekaHttpResponse<InstanceInfo> sendHeartBeat(String appName, String id, InstanceInfo info, InstanceStatus overriddenStatus);
 
+    /**
+     * 状态变更
+     * @param appName
+     * @param id
+     * @param newStatus
+     * @param info
+     * @return
+     */
     EurekaHttpResponse<Void> statusUpdate(String appName, String id, InstanceStatus newStatus, InstanceInfo info);
 
     EurekaHttpResponse<Void> deleteStatusOverride(String appName, String id, InstanceInfo info);

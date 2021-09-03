@@ -61,6 +61,8 @@ public interface LeaseManager<T> {
     boolean cancel(String appName, String id, boolean isReplication);
 
     /**
+     * 更新与传入的appName和id相关的租约。
+     * <p></p>
      * Renew the {@link Lease} associated w/ the passed in <code>appName</code>
      * and <code>id</code>.
      *

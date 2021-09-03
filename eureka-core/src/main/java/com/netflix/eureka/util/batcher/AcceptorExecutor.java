@@ -28,6 +28,19 @@ import org.slf4j.LoggerFactory;
 import static com.netflix.eureka.Names.METRIC_REPLICATION_PREFIX;
 
 /**
+ *
+ *一个有内部线程的活动对象，接受来自客户端的任务，并以拉动的方式将其分派给工作者。只要有项目或一批项目可用，工作者就会明确地请求这些项目。这保证了要处理的数据总是最新的，不会进行陈旧的数据处理。
+ *
+ *任务识别
+ *传递给处理的每个任务都有一个相应的任务ID。这个ID用于删除重复的任务（用新的副本替换旧的副本）。
+ *重新处理
+ *如果工作者的数据处理失败了，而且失败是暂时性的，工作者将把任务放回 AcceptorExecutor。这些数据将与当前的工作量合并，如果已经收到了较新的版本，则可能被丢弃。
+ *任务调度器从客户端接收任务，并将其执行委托给可配置数量的工作者。任务可以一次处理一个，也可以分批处理。只有未过期的任务才会被执行，如果有相同id的新任务被安排执行，旧的任务会被删除。懒惰地将工作（只在需要时）分派给工作者，保证数据总是最新的，没有陈旧的任务处理发生。
+ *任务处理器
+ *该组件的客户端必须提供一个TaskProcessor接口的实现，它将完成任务处理的实际工作。这个实现必须是线程安全的，因为它是由多个线程同时调用的。
+ *执行模式
+ *
+ *
  * An active object with an internal thread accepting tasks from clients, and dispatching them to
  * workers in a pull based manner. Workers explicitly request an item or a batch of items whenever they are
  * available. This guarantees that data to be processed are always up to date, and no stale data processing is done.

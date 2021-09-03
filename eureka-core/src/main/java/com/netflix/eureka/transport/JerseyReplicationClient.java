@@ -148,7 +148,7 @@ public class JerseyReplicationClient extends AbstractJerseyEurekaHttpClient impl
             } catch (MalformedURLException e) {
                 hostname = serviceUrl;
             }
-
+            // 构造器模式
             String jerseyClientName = "Discovery-PeerNodeClient-" + hostname;
             EurekaJerseyClientBuilder clientBuilder = new EurekaJerseyClientBuilder()
                     .withClientName(jerseyClientName)
@@ -160,7 +160,7 @@ public class JerseyReplicationClient extends AbstractJerseyEurekaHttpClient impl
                     .withMaxConnectionsPerHost(config.getPeerNodeTotalConnectionsPerHost())
                     .withMaxTotalConnections(config.getPeerNodeTotalConnections())
                     .withConnectionIdleTimeout(config.getPeerNodeConnectionIdleTimeoutSeconds());
-
+            // ssl处理
             if (serviceUrl.startsWith("https://") &&
                     "true".equals(System.getProperty("com.netflix.eureka.shouldSSLConnectionsUseSystemSocketFactory"))) {
                 clientBuilder.withSystemSSLConfiguration();

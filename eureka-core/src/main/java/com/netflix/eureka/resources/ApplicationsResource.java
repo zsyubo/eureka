@@ -223,6 +223,7 @@ public class ApplicationsResource {
 
         String[] regions = null;
         if (!isRemoteRegionRequested) {
+            // 全部
             EurekaMonitors.GET_ALL_DELTA.increment();
         } else {
             regions = regionsStr.toLowerCase().split(",");

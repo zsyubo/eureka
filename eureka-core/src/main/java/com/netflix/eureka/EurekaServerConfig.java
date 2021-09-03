@@ -257,7 +257,7 @@ public interface EurekaServerConfig {
     int getPeerNodeConnectionIdleTimeoutSeconds();
 
     /**
-     * 获取delta信息应该被缓存的时间，以便客户端检索该值而不会错过。
+     * 获取delta信息应该被缓存的时间，以便客户端检索该值而不会错过。 默认三分钟
      *
      * Get the time for which the delta information should be cached for the
      * clients to retrieve the value without missing it.

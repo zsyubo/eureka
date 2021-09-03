@@ -1,6 +1,11 @@
 package com.netflix.eureka.util.batcher;
 
 /**
+ * 任务调度器从客户端接收任务，并将其执行委托给可配置数量的工作者。任务可以一次处理一个，也可以分批处理。只有未过期的任务才会被执行，如果有相同id的新任务被安排执行，旧的任务会被删除。
+ * 懒惰地将工作（只在需要时）分派给工作者，保证数据总是最新的，没有陈旧的任务处理发生。
+ * 任务处理器
+ * 该组件的客户端必须提供一个TaskProcessor接口的实现，它将完成任务处理的实际工作。这个实现必须是线程安全的，因为它是由多个线程同时调用的。
+ *
  * Task dispatcher takes task from clients, and delegates their execution to a configurable number of workers.
  * The task can be processed one at a time or in batches. Only non-expired tasks are executed, and if a newer
  * task with the same id is scheduled for execution, the old one is deleted. Lazy dispatch of work (only on demand)
