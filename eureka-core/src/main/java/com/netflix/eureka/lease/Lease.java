@@ -52,7 +52,7 @@ public class Lease<T> {
     // Make it volatile so that the expiration task would see this quicker
     // 线程安全考虑
     private volatile long lastUpdateTimestamp;  // 最后更新时间？
-    private long duration;
+    private long duration; // 默认90
 
     public Lease(T r, int durationInSecs) {
         holder = r;
@@ -75,6 +75,7 @@ public class Lease<T> {
     }
 
     /**
+     * 通过更新驱逐时间取消租约。
      * Cancels the lease by updating the eviction time.
      */
     public void cancel() {

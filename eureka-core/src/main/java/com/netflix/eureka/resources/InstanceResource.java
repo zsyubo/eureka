@@ -141,7 +141,7 @@ public class InstanceResource {
 
     /**
      * Handles {@link InstanceStatus} updates.
-     *
+     * 更新服务状态
      * <p>
      * The status updates are normally done for administrative purposes to
      * change the instance status between {@link InstanceStatus#UP} and
@@ -272,6 +272,8 @@ public class InstanceResource {
     }
 
     /**
+     * 处理这个特定实例的租约取消问题。
+     *
      * Handles cancellation of leases for this particular instance.
      *
      * @param isReplication
