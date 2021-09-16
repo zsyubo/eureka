@@ -364,7 +364,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
         } finally {
             read.unlock();
         }
-
+        // 更新自我保护的值
         synchronized (lock) {
             if (this.expectedNumberOfClientsSendingRenews > 0) {
                 // Since the client wants to cancel it, reduce the number of clients to send renews.  既然客户想取消，那就减少客户的数量来发送续费。
@@ -490,6 +490,8 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     }
 
     /**
+     * 更新一个实例的状态。通常发生在把一个实例放在InstanceInfo.InstanceStatus.OUT_OF_SERVICE和InstanceInfo.InstanceStatus.UP之间，以使实例进入和退出交通。
+     * <p></p>
      * Updates the status of an instance. Normally happens to put an instance
      * between {@link InstanceStatus#OUT_OF_SERVICE} and
      * {@link InstanceStatus#UP} to put the instance in and out of traffic.
@@ -548,6 +550,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
                     info.setActionType(ActionType.MODIFIED);
                     recentlyChangedQueue.add(new RecentlyChangedItem(lease));
                     info.setLastUpdatedTimestamp();
+                    // 会清除缓存
                     invalidateCache(appName, info.getVIPAddress(), info.getSecureVipAddress());
                 }
                 return true;
@@ -768,6 +771,11 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     }
 
     /**
+     * 这个方法将返回带有所有通过的远程区域和当前区域的实例的应用程序。因此，这给出了一个来自多个区域的实例的联合视图。这个联合的应用程序实例可以限制在EurekaServerConfig.getRemoteRegionAppWhitelist(String)为每个区域返回的名称中。
+     * 如果没有为一个地区定义白名单，这个方法也会通过向EurekaServerConfig.getRemoteRegionAppWhitelist(String)方法传递null来寻找全局白名单。
+     * 如果你不是选择性地请求一个远程地区，请使用getApplicationsFromAllRemoteRegions()或getApplicationsFromLocalRegionOnly()。
+     *
+     *
      * This method will return applications with instances from all passed remote regions as well as the current region.
      * Thus, this gives a union view of instances from multiple regions. <br/>
      * The application instances for which this union will be done can be restricted to the names returned by
@@ -1012,8 +1020,10 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
         }
 
         Applications apps = new Applications();
+        // 版本号
         apps.setVersion(responseCache.getVersionDeltaWithRegions().get());
         Map<String, Application> applicationInstancesMap = new HashMap<String, Application>();
+        // 读写锁 good
         write.lock();
         try {
             Iterator<RecentlyChangedItem> iter = this.recentlyChangedQueue.iterator();
@@ -1023,6 +1033,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
                 InstanceInfo instanceInfo = lease.getHolder();
                 logger.debug("The instance id {} is found with status {} and actiontype {}",
                         instanceInfo.getId(), instanceInfo.getStatus().name(), instanceInfo.getActionType().name());
+                // 这什么鬼，直接从里面拿Application
                 Application app = applicationInstancesMap.get(instanceInfo.getAppName());
                 if (app == null) {
                     app = new Application(instanceInfo.getAppName());
@@ -1057,6 +1068,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
             }
 
             Applications allApps = getApplicationsFromMultipleRegions(remoteRegions);
+            // 只是为了搞一个hashCode？
             apps.setAppsHashCode(allApps.getReconcileHashCode());
             return apps;
         } finally {

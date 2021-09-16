@@ -165,6 +165,7 @@ public class ResponseCacheImpl implements ResponseCache {
                                 return value;
                             }
                         });
+        // 是否使用三级缓存
         if (shouldUseReadOnlyResponseCache) {
             // job，默认30s
             timer.schedule(getCacheUpdateTask(),
@@ -229,7 +230,7 @@ public class ResponseCacheImpl implements ResponseCache {
     }
 
     @VisibleForTesting
-    String get(final Key key, boolean useReadOnlyCache) {
+    String get(final Key key, boolean useReadOnlyCache /*是否使用三级缓存*/) {
         Value payload = getValue(key, useReadOnlyCache);
         if (payload == null || payload.getPayload().equals(EMPTY_PAYLOAD)) {
             return null;
@@ -262,6 +263,8 @@ public class ResponseCacheImpl implements ResponseCache {
     }
 
     /**
+     * 使某个特定应用程序的缓存失效。
+     * <p></p>
      * Invalidate the cache of a particular application.
      *
      * @param appName the application name of the application.
@@ -323,6 +326,7 @@ public class ResponseCacheImpl implements ResponseCache {
     }
 
     /**
+     * 获取远程区域的缓存数据的版本号。
      * Gets the version number of the cached data with remote regions.
      *
      * @return teh version number of the cached data with remote regions.
