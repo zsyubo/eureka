@@ -166,6 +166,7 @@ public class InstanceResource {
             @HeaderParam(PeerEurekaNode.HEADER_REPLICATION) String isReplication,
             @QueryParam("lastDirtyTimestamp") String lastDirtyTimestamp) {
         try {
+            // 先判断状态是存在
             if (registry.getInstanceByAppAndId(app.getName(), id) == null) {
                 logger.warn("Instance not found: {}/{}", app.getName(), id);
                 return Response.status(Status.NOT_FOUND).build();

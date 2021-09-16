@@ -517,6 +517,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
             if (lease == null) {
                 return false;
             } else {
+                // 先进行一次续约操作
                 lease.renew();
                 InstanceInfo info = lease.getHolder();
                 // Lease is always created with its instance info object.
@@ -633,8 +634,8 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
         logger.debug("Running the evict task");
 
         if (!isLeaseExpirationEnabled()) {
-            logger.debug("DS: lease expiration is currently disabled.");
             // 返回false才进
+            logger.debug("DS: lease expiration is currently disabled.");
             return;
         }
 

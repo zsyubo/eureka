@@ -49,6 +49,8 @@ public interface EurekaClient extends LookupService {
     public Applications getApplications(String serviceUrl);
 
     /**
+     * 实例列表
+     *
      * Gets the list of instances matching the given VIP Address.
      *
      * @param vipAddress The VIP address to match the instances for.

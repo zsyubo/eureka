@@ -748,6 +748,8 @@ public class DiscoveryClient implements EurekaClient {
     }
 
     /**
+     * 获取在通过的区域内匹配给定VIP地址的实例列表。
+     * <p></p>
      * Gets the list of instances matching the given VIP Address in the passed region.
      *
      * @param vipAddress - The VIP address to match the instances for.

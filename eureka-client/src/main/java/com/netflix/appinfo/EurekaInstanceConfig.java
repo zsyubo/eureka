@@ -108,6 +108,11 @@ public interface EurekaInstanceConfig {
     boolean getSecurePortEnabled();
 
     /**
+     * 指示eureka客户端需要多长时间（以秒为单位）向eureka服务器发送心跳以表明它仍然活着。
+     * 如果在getLeaseExpirationDurationInSeconds()中指定的时间内没有收到心跳，eureka服务器将从其视图中删除该实例，从而不允许对该实例进行通信。
+     注意，如果该实例实现了HealthCheckCallback，然后决定使自己不可用，那么它仍然可以不接受流量。
+     获取在通过的区域内匹配给定VIP地址的实例列表。  默认30S
+     * <p></p>
      * Indicates how often (in seconds) the eureka client needs to send
      * heartbeats to eureka server to indicate that it is still alive. If the
      * heartbeats are not received for the period specified in
@@ -125,6 +130,11 @@ public interface EurekaInstanceConfig {
     int getLeaseRenewalIntervalInSeconds();
 
     /**
+     * 就是从服务器收到最后一次心跳开始，多少时间没收到续约操作就剔除掉这个这个客户端，默认是90
+     * 表示eureka服务器在收到最后一次心跳后等待的时间（秒），然后从其视图中删除该实例，从而禁止对该实例的流量。
+     * 设置这个值太长可能意味着，即使该实例不存在，流量也可以被路由到该实例。设置这个值太小可能意味着，由于临时的网络故障，
+     * 该实例可能会被剔除。这个值至少要设置为高于getLeaseRenewalIntervalInSeconds()中指定的值。获取在通过的区域内匹配给定VIP地址的实例列表。
+     * <p></p>
      * Indicates the time in seconds that the eureka server waits since it
      * received the last heartbeat before it can remove this instance from its
      * view and there by disallowing traffic to this instance.
