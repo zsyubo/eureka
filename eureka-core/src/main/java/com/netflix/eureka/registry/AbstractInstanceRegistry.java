@@ -977,6 +977,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
             }
 
             Applications allApps = getApplications(!disableTransparentFallback);
+            // 这里拿全量注册表来计算hashCode， 这个hashCode 是为了客户端拉取到增量信息后生成hashcode和服务端匹配，匹配的话就是同步成功
             apps.setAppsHashCode(allApps.getReconcileHashCode());
             return apps;
         } finally {
